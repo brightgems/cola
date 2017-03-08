@@ -55,7 +55,7 @@ class WeiboLogin(object):
     
     def prelogin(self):
         username = self.get_user(self.username)
-        prelogin_url = 'http://login.sina.com.cn/sso/prelogin.php?entry=sso&callback=sinaSSOController.preloginCallBack&su=%s&rsakt=mod&client=ssologin.js(v1.4.5)' % username
+        prelogin_url = 'http://login.sina.com.cn/sso/prelogin.php?entry=sso&callback=sinaSSOController.preloginCallBack&su=%s&rsakt=mod&client=ssologin.js(v1.4.18)' % username
         data = self.opener.open(prelogin_url)
         regex = re.compile('\((.*)\)')
         try:
@@ -68,7 +68,7 @@ class WeiboLogin(object):
             raise WeiboLoginFailure
         
     def login(self):
-        login_url = 'http://login.sina.com.cn/sso/login.php?client=ssologin.js(v1.4.5)'
+        login_url = 'http://login.sina.com.cn/sso/login.php?client=ssologin.js(v1.4.18)'
         
         try:
             servertime, nonce, pubkey, rsakv = self.prelogin()
@@ -78,36 +78,36 @@ class WeiboLogin(object):
                 'from': '',
                 'savestate': '7',
                 'userticket': '1',
-                'ssosimplelogin': '1',
+				'pagerefer': 'http://login.sina.com.cn/sso/logout.php',
                 'vsnf': '1',
-                'vsnval': '',
                 'su': self.get_user(self.username),
-                'service': 'miniblog',
+                'service': 'weibo',
                 'servertime': servertime,
                 'nonce': nonce,
                 'pwencode': 'rsa2',
+                'rsakv' : rsakv,				
                 'sp': self.get_passwd(self.passwd, pubkey, servertime, nonce),
+                'sr': '1920*1080',				
                 'encoding': 'UTF-8',
                 'prelt': '115',
-                'rsakv' : rsakv,
-                'url': 'http://weibo.com/ajaxlogin.php?framelogin=1&amp;callback=parent.sinaSSOController.feedBackUrlCallBack',
-                'returntype': 'META'
+                'cdult':3,
+                'returntype': 'TEXT'
             }
             postdata = urllib.urlencode(postdata)
             text = self.opener.open(login_url, postdata)
 
             # Fix for new login changed since about 2014-3-28
-            ajax_url_regex = re.compile('location\.replace\(\'(.*)\'\)')
-            matches = ajax_url_regex.search(text)
-            if matches is not None:
-                ajax_url = matches.group(1)
-                text = self.opener.open(ajax_url)
             
-            regex = re.compile('\((.*)\)')
-            json_data = json.loads(regex.search(text).group(1))
-            result = json_data['result'] == True
-            if result is False and 'reason' in json_data:
-                return result, json_data['reason']
-            return result
+            if "retcode" in text:
+                json_data = json.loads(text)
+                if 'reason' in json_data:
+                    return result, json_data['reason']
+                else:
+                    ajax_url = json_data['crossDomainUrlList'][0]
+                    text = self.opener.open(ajax_url)
+                    
+            
+            print(text)
+            return(True)			
         except WeiboLoginFailure:
             return False
