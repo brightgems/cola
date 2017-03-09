@@ -1,0 +1,148 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{e0b97371-5135-4046-a636-012ea0e6f15a}</ProjectGuid>
+    <ProjectHome />
+    <StartupFile>setup.py</StartupFile>
+    <SearchPath />
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <InterpreterId>{9b7f6c34-57eb-4cc1-a2a7-51577d652091}</InterpreterId>
+    <InterpreterVersion>2.7</InterpreterVersion>
+    <IsWindowsApplication>False</IsWindowsApplication>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
+  <PropertyGroup>
+    <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
+    <PtvsTargetsFile>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets</PtvsTargetsFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="app\weibo\requirements.txt" />
+    <Content Include="app\weibo\weibo.yaml" />
+    <Content Include="app\wiki\requirements.txt" />
+    <Content Include="app\wiki\wiki.yaml" />
+    <Content Include="lab\weibosearch\keywords.txt" />
+    <Content Include="requirements.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="app\exchange_rate\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="app\weibo\bundle.py" />
+    <Compile Include="app\weibo\conf.py" />
+    <Compile Include="app\weibo\login.py" />
+    <Compile Include="app\weibo\parsers.py" />
+    <Compile Include="app\weibo\storage.py" />
+    <Compile Include="app\weibo\utils.py" />
+    <Compile Include="app\weibo\__init__.py" />
+    <Compile Include="app\wiki\__init__.py" />
+    <Compile Include="app\__init__.py" />
+    <Compile Include="cola\cluster\master.py" />
+    <Compile Include="cola\cluster\stage.py" />
+    <Compile Include="cola\cluster\tracker.py" />
+    <Compile Include="cola\cluster\worker.py" />
+    <Compile Include="cola\cluster\__init__.py" />
+    <Compile Include="cola\cmdline.py" />
+    <Compile Include="cola\commands\job.py" />
+    <Compile Include="cola\commands\master.py" />
+    <Compile Include="cola\commands\startproject.py" />
+    <Compile Include="cola\commands\worker.py" />
+    <Compile Include="cola\commands\__init__.py" />
+    <Compile Include="cola\context.py" />
+    <Compile Include="cola\core\bloomfilter\hashtype.py" />
+    <Compile Include="cola\core\bloomfilter\__init__.py" />
+    <Compile Include="cola\core\config.py" />
+    <Compile Include="cola\core\counter.py" />
+    <Compile Include="cola\core\dedup.py" />
+    <Compile Include="cola\core\errors.py" />
+    <Compile Include="cola\core\extractor\preprocess.py" />
+    <Compile Include="cola\core\extractor\readability.py" />
+    <Compile Include="cola\core\extractor\utils.py" />
+    <Compile Include="cola\core\extractor\__init__.py" />
+    <Compile Include="cola\core\handlers.py" />
+    <Compile Include="cola\core\logs.py" />
+    <Compile Include="cola\core\mq\client.py" />
+    <Compile Include="cola\core\mq\distributor.py" />
+    <Compile Include="cola\core\mq\hash_ring.py" />
+    <Compile Include="cola\core\mq\node.py" />
+    <Compile Include="cola\core\mq\store.py" />
+    <Compile Include="cola\core\mq\utils.py" />
+    <Compile Include="cola\core\mq\__init__.py" />
+    <Compile Include="cola\core\opener.py" />
+    <Compile Include="cola\core\parsers.py" />
+    <Compile Include="cola\core\rpc.py" />
+    <Compile Include="cola\core\unit.py" />
+    <Compile Include="cola\core\urls.py" />
+    <Compile Include="cola\core\utils.py" />
+    <Compile Include="cola\core\zip.py" />
+    <Compile Include="cola\core\__init__.py" />
+    <Compile Include="cola\functions\budget.py" />
+    <Compile Include="cola\functions\counter.py" />
+    <Compile Include="cola\functions\speed.py" />
+    <Compile Include="cola\functions\__init__.py" />
+    <Compile Include="cola\job\container.py" />
+    <Compile Include="cola\job\executor.py" />
+    <Compile Include="cola\job\task.py" />
+    <Compile Include="cola\job\__init__.py" />
+    <Compile Include="cola\settings.py" />
+    <Compile Include="cola\__init__.py" />
+    <Compile Include="lab\generic\__init__.py" />
+    <Compile Include="lab\weibosearch\bundle.py" />
+    <Compile Include="lab\weibosearch\conf.py" />
+    <Compile Include="lab\weibosearch\login.py" />
+    <Compile Include="lab\weibosearch\parsers.py" />
+    <Compile Include="lab\weibosearch\starts.py" />
+    <Compile Include="lab\weibosearch\storage.py" />
+    <Compile Include="lab\weibosearch\__init__.py" />
+    <Compile Include="setup.py" />
+    <Compile Include="tests\app\test_weibo.py" />
+    <Compile Include="tests\app\test_wiki.py" />
+    <Compile Include="tests\app\__init__.py" />
+    <Compile Include="tests\test_bloomfilter.py" />
+    <Compile Include="tests\test_bloom_filter_mq.py" />
+    <Compile Include="tests\test_config.py" />
+    <Compile Include="tests\test_extractor.py" />
+    <Compile Include="tests\test_functions.py" />
+    <Compile Include="tests\test_log.py" />
+    <Compile Include="tests\test_master_worker.py" />
+    <Compile Include="tests\test_mp_mq.py" />
+    <Compile Include="tests\test_mq.py" />
+    <Compile Include="tests\test_mq_store.py" />
+    <Compile Include="tests\test_opener.py" />
+    <Compile Include="tests\test_rpc.py" />
+    <Compile Include="tests\test_settings.py" />
+    <Compile Include="tests\test_urlpatterns.py" />
+    <Compile Include="tests\test_zip.py" />
+    <Compile Include="tests\__init__.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="app" />
+    <Folder Include="app\exchange_rate\" />
+    <Folder Include="app\weibo" />
+    <Folder Include="app\wiki" />
+    <Folder Include="cola" />
+    <Folder Include="cola\cluster" />
+    <Folder Include="cola\commands" />
+    <Folder Include="cola\core" />
+    <Folder Include="cola\core\bloomfilter" />
+    <Folder Include="cola\core\extractor" />
+    <Folder Include="cola\core\mq" />
+    <Folder Include="cola\functions" />
+    <Folder Include="cola\job" />
+    <Folder Include="lab\" />
+    <Folder Include="lab\generic" />
+    <Folder Include="lab\weibosearch" />
+    <Folder Include="tests" />
+    <Folder Include="tests\app" />
+  </ItemGroup>
+  <ItemGroup>
+    <InterpreterReference Include="{9b7f6c34-57eb-4cc1-a2a7-51577d652091}\2.7" />
+  </ItemGroup>
+  <Import Project="$(PtvsTargetsFile)" Condition="Exists($(PtvsTargetsFile))" />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" Condition="!Exists($(PtvsTargetsFile))" />
+</Project>

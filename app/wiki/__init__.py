@@ -31,7 +31,7 @@ from cola.core.opener import MechanizeOpener
 from cola.core.errors import DependencyNotInstalledError
 from cola.core.config import Config
 from cola.job import JobDescription
-
+import urlparse
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -130,27 +130,28 @@ class WikiParser(Parser):
         soup = BeautifulSoup(html)
         
         title, content, last_update = self._extract(soup)
-        if title is None:
+        if not title:
             return
         title = title + ' ' + lang
         self.store(title, content, last_update)
         
-        def _is_same(out_url):
+        def _is_same(out_url,url):
             return out_url.rsplit('#', 1)[0] == url
 
+        
         for link in br.links():
-            if link.url.startswith('http://'):
+            q = urlparse.urlparse(link.url)
+            if q.scheme in ['http','https']:
                 out_url = link.url
-                if not _is_same(out_url):
+                if not _is_same(out_url,url):
                     yield out_url
-            else:
+            elif not q.scheme:
                 out_url = urlparse.urljoin(link.base_url, link.url)
-                if not _is_same(out_url):
+                if not _is_same(out_url,url):
                     yield out_url
 
-url_patterns = UrlPatterns(
-    Url(r'^http://(zh|en).wikipedia.org/wiki/[^(:|/)]+$', 'wiki_page', WikiParser)
-)
+url_patterns = UrlPatterns(Url(r'^https://(zh|en).wikipedia.org/wiki/[^(:|/)]+$', 'wiki_page', WikiParser))
+
 
 def get_job_desc():
     return JobDescription('wikipedia crawler', url_patterns, MechanizeOpener,
