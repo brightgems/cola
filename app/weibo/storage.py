@@ -66,22 +66,21 @@ class MicroBlog(Document):
     mid = StringField(required=True)
     uid = StringField(required=True)
     content = StringField()
+    ouid = StringField()
     omid = StringField()
     forward = StringField()
     created = DateTimeField()
     geo = EmbeddedDocumentField(Geo)
-    
     n_likes = IntField()
     likes = ListField(EmbeddedDocumentField(Like))
     n_forwards = IntField()
     forwards = ListField(EmbeddedDocumentField(Forward)) 
     n_comments = IntField()
     comments = ListField(EmbeddedDocumentField(Comment))
-    
+
+    last_update = DateTimeField()
     meta = {
-        'indexes': [
-            {'fields': ['mid', 'uid']}
-        ]
+        'indexes': [{'fields': ['mid', 'uid']}]
     }
     
 class EduInfo(EmbeddedDocument):
@@ -105,13 +104,17 @@ class UserInfo(EmbeddedDocument):
     blog = URLField()
     site = URLField()
     intro = StringField()
-    
+    pf_intro = StringField()
+    verified = BooleanField()
+    vip = BooleanField()
+    level_score = IntField() # 经验值
     email = EmailField()
     qq = StringField()
     msn = StringField()
-    
+    register_date = DateTimeField()
     n_follows = IntField()
     n_fans = IntField()
+    is_person = BooleanField()
     
     edu = ListField(EmbeddedDocumentField(EduInfo))
     work = ListField(EmbeddedDocumentField(WorkInfo))

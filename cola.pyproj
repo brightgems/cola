@@ -22,10 +22,13 @@
     <PtvsTargetsFile>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets</PtvsTargetsFile>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="app\exchange_rate\README.rst" />
+    <Content Include="app\weibo\README.rst" />
     <Content Include="app\weibo\requirements.txt" />
     <Content Include="app\weibo\weibo.yaml" />
     <Content Include="app\wiki\requirements.txt" />
     <Content Include="app\wiki\wiki.yaml" />
+    <Content Include="cola\conf\main.yaml" />
     <Content Include="lab\weibosearch\keywords.txt" />
     <Content Include="requirements.txt" />
   </ItemGroup>
@@ -128,6 +131,7 @@
     <Folder Include="cola" />
     <Folder Include="cola\cluster" />
     <Folder Include="cola\commands" />
+    <Folder Include="cola\conf\" />
     <Folder Include="cola\core" />
     <Folder Include="cola\core\bloomfilter" />
     <Folder Include="cola\core\extractor" />

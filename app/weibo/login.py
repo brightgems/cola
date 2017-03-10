@@ -25,7 +25,7 @@ import base64
 import binascii
 import re
 import json
-
+from cola.core.logs import get_logger
 from cola.core.errors import DependencyNotInstalledError,\
                              LoginFailure
 
@@ -39,7 +39,7 @@ class WeiboLoginFailure(LoginFailure): pass
 class WeiboLogin(object):
     def __init__(self, opener, username, passwd):
         self.opener = opener
-        
+        self.logger = get_logger("weibo.login")
         self.username = username
         self.passwd = passwd
         
@@ -101,13 +101,13 @@ class WeiboLogin(object):
             if "retcode" in text:
                 json_data = json.loads(text)
                 if 'reason' in json_data:
-                    return result, json_data['reason']
+                    return False, json_data['reason']
                 else:
                     ajax_url = json_data['crossDomainUrlList'][0]
                     text = self.opener.open(ajax_url)
-                    
-            
-            print(text)
+            else:
+                return False        
+            self.logger.info("weibo login successfuly as `%s`" % self.username)
             return(True)			
         except WeiboLoginFailure:
             return False

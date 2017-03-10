@@ -20,6 +20,11 @@ Created on 2013-6-10
 import unittest
 import time
 
+import os
+import sys
+
+sys.path.insert(0,os.path.curdir)
+
 from cola.core.opener import MechanizeOpener
 from cola.core.unit import Bundle
 
@@ -29,7 +34,9 @@ from app.weibo.parsers import MicroBlogParser, ForwardCommentLikeParser, \
 from app.weibo.conf import user_config
 from app.weibo.bundle import WeiboUserBundle
 
-from pymongo import Connection
+from pymongo import MongoClient
+
+
 
 class Test(unittest.TestCase):
 
@@ -39,7 +46,7 @@ class Test(unittest.TestCase):
         self.bundle = WeiboUserBundle(self.test_uid)
         self.opener = MechanizeOpener()
         
-        self.conn = Connection()
+        self.conn = MongoClient()
         self.db = self.conn[getattr(user_config.job, 'db')]
         self.users_collection = self.db.weibo_user
         self.weibos_collection = self.db.micro_blog
