@@ -455,9 +455,9 @@ class UserInfoParser(WeiboParser):
                     header_soup = beautiful_soup(data['html'])
                     weibo_user.info.avatar = header_soup.find('p', attrs='photo_wrap')\
                                                 .find('img')['src']
-                    bs_verified = forwardcontent.find('a',attrs={"suda-data":"key=pc_apply_entry&value=feed_icon"})
+                    bs_verified = header_soup.find('a',attrs={"suda-data":"key=pc_apply_entry&value=feed_icon"})
                     weibo_user.info.verified = True if bs_verify else False
-                    bs_vip = forwardcontent.find('a',attrs={"suda-uatrack":"key=home_vip&value=home_feed_vip"})
+                    bs_vip = header_soup.find('a',attrs={"suda-uatrack":"key=home_vip&value=home_feed_vip"})
                     weibo_user.info.vip = True if bs_vip else False
                     weibo_user.info.pf_intro = header_soup.find('div', attrs={'class': 'pf_intro'}).text
                 elif domid == 'CD_person_detail':
