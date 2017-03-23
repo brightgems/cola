@@ -30,11 +30,15 @@ from cola.job import JobDescription
 
 from login import WeiboLogin
 from parsers import MicroBlogParser, ForwardCommentLikeParser,\
-                    UserInfoParser, UserFriendParser
+                    UserInfoParser, UserFriendParser,UserHomePageParser
 from conf import starts, user_config, instances
 from bundle import WeiboUserBundle
 
 def login_hook(opener, **kw):
+    # Skip login step if detail user profile doesn't need
+    if not getattr(user_config.job.fetch,"userprofile",False):
+        return True
+
     username = str(kw['username'])
     passwd = str(kw['password'])
     
@@ -42,9 +46,10 @@ def login_hook(opener, **kw):
     return loginer.login()
 
 url_patterns = UrlPatterns(
-    Url(r'http://weibo.com/aj/mblog/mbloglist.*', 'micro_blog', MicroBlogParser, priority=1),
+    Url(r'http://www.weibo.com/u/.*', 'user_home_page', UserHomePageParser,priority=1),
+    Url(r'http://weibo.com/p/aj/v6/mblog/mbloglist.*', 'micro_blog', MicroBlogParser, priority=1),
     Url(r'http://weibo.com/aj/.+/big.*', 'forward_comment_like', ForwardCommentLikeParser ,priority=2),
-    Url(r'http://weibo.com/\d+/info', 'user_info', UserInfoParser,priority=1),
+    Url(r'http://weibo.com/p/\d+/info', 'user_info', UserInfoParser,priority=1),
     Url(r'http://weibo.com/\d+/follow.*', 'follows', UserFriendParser,priority=2),
     Url(r'http://weibo.com/\d+/fans.*', 'fans', UserFriendParser,priority=2),
 )

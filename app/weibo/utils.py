@@ -19,6 +19,9 @@ Created on 2013-7-6
 
 @author: Chine
 '''
+import requests
+import json
+import random
 
 ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
@@ -128,6 +131,20 @@ def get_avatar_size_url(img_url, size=50):
         return img_url
     splits[-3] = str(size)
     return '/'.join(splits)
+
+def get_ip_proxy():
+    '''
+    >>> get_ip_proxy()
+    
+    '''
+    myipproxy_url = "http://ipmomentum.online/api"
+    rsp = requests.get(myipproxy_url)
+    lsip_ = json.loads(rsp.text)
+    if len(lsip_) == 0:
+        return
+    rdn_ = random.randint(0,len(lsip_))
+    p_ = lsip_[rdn_]
+    return "%s:%s" % (p_['ip'],p_['port'])
     
 if __name__ == "__main__":
     import doctest

@@ -36,8 +36,12 @@ from login import WeiboLoginFailure
 from bundle import WeiboUserBundle
 from storage import DoesNotExist, Q, WeiboUser, Friend,\
                     MicroBlog, Geo, UserInfo, WorkInfo, EduInfo,\
-                    Comment, Forward, Like, ValidationError
-from conf import fetch_forward, fetch_comment, fetch_like,effective_start_date
+                    Comment, Forward, Like
+
+from conf import fetch_forward, fetch_comment, fetch_like,fetch_userprofile,effective_start_date
+
+from utils import get_ip_proxy
+
 
 try:
     from dateutil.parser import parse
@@ -52,6 +56,7 @@ class WeiboParser(Parser):
         self.bundle = bundle
         self.uid = bundle.label
         self.opener.set_default_timeout(TIMEOUT)
+
         if not hasattr(self, 'logger') or self.logger is None:
             self.logger = get_logger(name='weibo_parser')
     
@@ -79,6 +84,39 @@ class WeiboParser(Parser):
             self.bundle.weibo_user.save()
         return self.bundle.weibo_user
 
+class UserHomePageParser(WeiboParser):
+    def parse(self, url=None):
+        if self.bundle.exists is False:
+            return
+        
+        url = url or self.url
+        # add proxy
+        p_ = get_ip_proxy()
+        if p_:
+            self.opener.remove_proxy()
+            self.opener.add_proxy(p_)
+
+        br = self.opener.browse_open(url)
+
+        if not self.check(url, br):
+            return
+
+        try:
+            soup = beautiful_soup(br.response().read())
+        except KeyError:
+            raise FetchBannedError('fetch banned by weibo server')
+        
+        # find page_id
+        pid_ = re.findall("CONFIG\['page_id'\]='(.*)';")
+        if not pid_:
+            raise FetchBannedError('fetch banned by weibo server')
+
+        domain_ = re.findall("CONFIG\['page_id'\]='(.*)';")[0]
+
+        url = "http://www.weibo.com/p/aj/v6/mblog/mbloglist?ajwvr=6&domain=%s&profile_ftype=1&is_all=1&pagebar=0&pl_name=Pl_Official_MyProfileFeed__21&id=%s&script_uri=/u/%s&feed_type=0&page=1&domain_op=%s&__rnd=1490263820238" \
+                % (domain_,pid_,self.bundle.uid, domain_)
+        yield url
+
 class MicroBlogParser(WeiboParser):
     def parse(self, url=None):
         if self.bundle.exists is False:
@@ -86,7 +124,14 @@ class MicroBlogParser(WeiboParser):
         
         url = url or self.url
         params = urldecode(url)
+        # add proxy
+        p_ = get_ip_proxy()
+        if p_:
+            self.opener.remove_proxy()
+            self.opener.add_proxy(p_)
+
         br = self.opener.browse_open(url)
+        
 #         self.logger.debug('load %s finish' % url)
         
         if not self.check(url, br):
@@ -131,7 +176,7 @@ class MicroBlogParser(WeiboParser):
             # skip all following blogs if create date less than effective start
             # date
             if (blog_create_date - effective_start_date).days < 0:
-                self.logger.info("%s: blog has sync up after %s" %(self.uid,effective_start_date.strftime("%Y%m%d")))
+                self.logger.info("%s: blog has sync up after %s" % (self.uid,effective_start_date.strftime("%Y%m%d")))
                 finished = True
                 break
 
@@ -139,7 +184,7 @@ class MicroBlogParser(WeiboParser):
                 params['end_id'] = mid
             # skip
             if mid in weibo_user.newest_mids:
-                self.logger.info("%s: reach earliest blog %s" %(self.uid,mid))
+                self.logger.info("%s: reach earliest blog %s" % (self.uid,mid))
                 finished = True
                 break
             if len(self.bundle.newest_mids) < 3:
@@ -287,7 +332,14 @@ class ForwardCommentLikeParser(WeiboParser):
             return
         
         url = url or self.url
+        # add proxy
+        p_ = get_ip_proxy()
+        if p_:
+            self.opener.remove_proxy()
+            self.opener.add_proxy(p_)
+
         br = self.opener.browse_open(url)
+        
         try:
             jsn = json.loads(br.response().read())
         except ValueError:
@@ -326,7 +378,7 @@ class ForwardCommentLikeParser(WeiboParser):
             instance.content = dl.text.strip()
 
         counter_type = None
-        if url.startswith('http://weibo.com/aj/comment'):
+        if re.match('http://weibo.com/.*/comment.*',url):
             counter_type = 'comment'
             dls = soup.find_all('dl', mid=True)
             for dl in dls:
@@ -335,7 +387,7 @@ class ForwardCommentLikeParser(WeiboParser):
                 set_instance(comment, dl)
                 
                 mblog.comments.append(comment)
-        elif url.startswith('http://weibo.com/aj/mblog/info'):
+        elif re.match('http://weibo.com/.*/mblog/info.*',url):
             counter_type = 'forward'
             dls = soup.find_all('dl', mid=True)
             for dl in dls:
@@ -345,7 +397,7 @@ class ForwardCommentLikeParser(WeiboParser):
                 set_instance(forward, dl)
                 
                 mblog.forwards.append(forward)
-        elif url.startswith('http://weibo.com/aj/like'):
+        elif url.startswith('http://weibo.com/.*/like.*'):
             counter_type = 'like'
             lis = soup.find_all('li', uid=True)
             for li in lis:
@@ -377,6 +429,12 @@ class UserInfoParser(WeiboParser):
             return
         
         url = url or self.url
+        # add proxy
+        p_ = get_ip_proxy()
+        if p_:
+            self.opener.remove_proxy()
+            self.opener.add_proxy(p_)
+
         br = self.opener.browse_open(url)
 #         self.logger.debug('load %s finish' % url)
         soup = beautiful_soup(br.response().read())
@@ -641,6 +699,11 @@ class UserFriendParser(WeiboParser):
             return
         
         url = url or self.url
+        # add proxy
+        p_ = get_ip_proxy()
+        if p_:
+            self.opener.remove_proxy()
+            self.opener.add_proxy(p_)
 
         br = self.opener.browse_open(url)
 #         self.logger.debug('load %s finish' % url)
@@ -694,7 +757,7 @@ class UserFriendParser(WeiboParser):
                 return
             raise e
         
-        if ul is None:
+        if ul is None and fetch_userprofile:
             if is_follow is True:
                 if is_new_mode:
                     yield 'http://weibo.com/%s/follow?relate=fans' % self.uid

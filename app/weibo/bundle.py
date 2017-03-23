@@ -23,6 +23,7 @@ Created on 2013-6-8
 import time
 
 from cola.core.unit import Bundle
+from conf import fetch_userprofile
 
 class WeiboUserBundle(Bundle):
     def __init__(self, uid):
@@ -39,11 +40,12 @@ class WeiboUserBundle(Bundle):
         self.current_mblog = None
         
     def urls(self):
-        start = int(time.time() * (10**6))
-        return [
-            'http://weibo.com/%s/follow' % self.uid,
-            'http://weibo.com/aj/mblog/mbloglist?uid=%s&_k=%s' % (self.uid, start),
-            'http://weibo.com/%s/info' % self.uid,
-            # remove because some user's link has been http://weibo.com/uid/follow?relate=fans
-            # 'http://weibo.com/%s/fans' % self.uid
+        start = int(time.time() * (10 ** 6))
+        urls_ = [
+            # 微博主页
+            'http://weibo.com/u/%s?is_all=1&_k=%s' % (self.uid, start),
         ]
+        if fetch_userprofile:
+            urls.append('http://weibo.com/%s/info' % self.uid)
+            urls.append('http://weibo.com/%s/follow' % self.uid)
+        return urls_
