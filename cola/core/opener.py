@@ -185,8 +185,9 @@ class SpynnerOpener(Opener):
         if user_agent is None:
             user_agent = 'Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)'
         
-        self.br = spynner.Browser(user_agent=user_agent, **kwargs)
-        
+        self.br = spynner.Browser(user_agent=user_agent)
+                
+
     def spynner_open(self, url, data=None, headers=None, method='GET', 
                      wait_for_text=None, wait_for_selector=None, tries=None):
         try:
@@ -225,3 +226,7 @@ class SpynnerOpener(Opener):
         self.br.wait_for_content(
             lambda br: not br.webframe.findFirstElement(selector).isNull(), 
             **kwargs)
+
+    def add_proxy(self,addr, proxy_type='all',
+                  user=None, password=None):
+        self.br.set_proxy(addr)

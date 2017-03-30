@@ -23,12 +23,16 @@ Created on 2013-6-9
 import os
 
 from cola.core.config import Config
+from utils import get_ip_proxy
 
 base = os.path.dirname(os.path.abspath(__file__))
 user_conf = os.path.join(base, 'test.yaml')
 if not os.path.exists(user_conf):
     user_conf = os.path.join(base, 'weibo.yaml')
 user_config = Config(user_conf)
+proxys = get_ip_proxy()
+proxys =  [p_ for p_ in proxys if p_['type']!='https']
+user_config.opener.proxys = proxys
 
 starts = [str(start.uid) for start in user_config.job.starts]
 
