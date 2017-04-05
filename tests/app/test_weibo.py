@@ -25,18 +25,18 @@ import sys
 
 sys.path.insert(0,os.path.curdir)
 
-from cola.core.opener import MechanizeOpener
+from cola.core.opener import SpynnerOpener,MechanizeOpener
 from cola.core.unit import Bundle
 
 from app.weibo import login_hook
 from app.weibo.parsers import MicroBlogParser, ForwardCommentLikeParser, \
-                                    UserInfoParser, UserFriendParser,UserHomePageParser
+                                    UserInfoParser, UserFriendParser
 from app.weibo.conf import user_config
 from app.weibo.bundle import WeiboUserBundle
 
 from pymongo import MongoClient
-
-
+from app.weibo.tools import QT4_Py_Cookie
+from cookielib import MozillaCookieJar
 
 class Test(unittest.TestCase):
 
@@ -45,13 +45,15 @@ class Test(unittest.TestCase):
         self.test_uid = '1667486960'
         self.bundle = WeiboUserBundle(self.test_uid)
         self.opener = MechanizeOpener()
+        self.opener.br.user_agent = "Baiduspider+(+http://www.baidu.com/search/spider.htm)"
+        #self.mbr = MechanizeOpener()
         
         self.conn = MongoClient()
         self.db = self.conn[getattr(user_config.job, 'db')]
         self.users_collection = self.db.weibo_user
         self.weibos_collection = self.db.micro_blog
         
-        assert len(user_config.job['login']) > 0
+        #assert len(user_config.job['login']) > 0
         
         login_hook(self.opener, **user_config.job['login'][0])
 
@@ -71,7 +73,7 @@ class Test(unittest.TestCase):
         self.conn.close()
         
     def testMicroBlogParser(self):
-        test_url = 'http://weibo.com/aj/mblog/mbloglist?uid=%s&_k=%s' % (
+        test_url = 'http://weibo.com/p/aj/v6/mblog/mbloglist?uid=%s&_k=%s' % (
             self.test_uid,
             int(time.time() * (10**6))
         )

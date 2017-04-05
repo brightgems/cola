@@ -31,6 +31,7 @@ from cola.core.parsers import Parser
 from cola.core.utils import urldecode, beautiful_soup
 from cola.core.errors import DependencyNotInstalledError, FetchBannedError
 from cola.core.logs import get_logger
+from cola.core.opener import MechanizeOpener,SpynnerOpener
 
 from login import WeiboLoginFailure
 from bundle import WeiboUserBundle
@@ -41,7 +42,7 @@ from storage import DoesNotExist, Q, WeiboUser, Friend,\
 from conf import fetch_forward, fetch_comment, fetch_like,fetch_userprofile,effective_start_date
 
 from utils import get_ip_proxy
-
+from conf import user_config
 
 try:
     from dateutil.parser import parse
@@ -52,6 +53,9 @@ TIMEOUT = 30.0
 
 class WeiboParser(Parser):
     def __init__(self, opener=None, url=None, bundle=None, **kwargs):
+        #if not opener or isinstance(opener,SpynnerOpener):
+        #    opener = MechanizeOpener(user_agent=user_config.conf.opener.user_agent)
+
         super(WeiboParser, self).__init__(opener=opener, url=url, **kwargs)
         self.bundle = bundle
         self.uid = bundle.label
@@ -84,44 +88,6 @@ class WeiboParser(Parser):
             self.bundle.weibo_user.save()
         return self.bundle.weibo_user
 
-class UserHomePageParser(WeiboParser):
-    def parse(self, url=None):
-        if self.bundle.exists is False:
-            return
-        
-        url = url or self.url
-        # add proxy
-        p_ = None #get_ip_proxy()
-        if p_:
-            self.opener.remove_proxy()
-            self.opener.add_proxy(p_)
-
-        br = self.opener.browse_open(url)
-        next_url = "https://login.sina.com.cn/visitor/visitor?a=incarnate&t=gdfg4643%2&w=46j&c=ete&gc=4643&cb=cross_domain&from=weibo&_rand=&_rand=" + str(int(time.time() * (10 ** 6)))
-        import urllib
-        next_url = urllib.quote(next_url)
-        br = self.opener.browse_open(next_url)
-        br = self.opener.browse_open(url)
-        if not self.check(url, br):
-            return
-        html_ = br.response().read()
-        try:
-            soup = beautiful_soup(html_)
-        except KeyError:
-            self.logger.error(html_)
-            raise FetchBannedError('fetch banned by weibo server')
-        
-        # find page_id
-        pid_ = re.findall("CONFIG\['page_id'\]='(.*)';",html_)
-        if not pid_:
-            raise FetchBannedError('fetch banned by weibo server')
-
-        domain_ = re.findall("CONFIG\['page_id'\]='(.*)';")[0]
-
-        url = "http://www.weibo.com/p/aj/v6/mblog/mbloglist?ajwvr=6&domain=%s&profile_ftype=1&is_all=1&pagebar=0&pl_name=Pl_Official_MyProfileFeed__21&id=%s&script_uri=/u/%s&feed_type=0&page=1&domain_op=%s&__rnd=1490263820238" \
-                % (domain_,pid_,self.bundle.uid, domain_)
-        yield url
-
 class MicroBlogParser(WeiboParser):
     def parse(self, url=None):
         if self.bundle.exists is False:
@@ -130,10 +96,11 @@ class MicroBlogParser(WeiboParser):
         url = url or self.url
         params = urldecode(url)
         # add proxy
-        p_ = get_ip_proxy()
-        if p_:
-            self.opener.remove_proxy()
-            self.opener.add_proxy(p_)
+        if isinstance(self.opener ,MechanizeOpener):
+            p_ = get_ip_proxy()
+            if p_:
+                self.opener.remove_proxy()
+                self.opener.add_proxy(p_)
 
         br = self.opener.browse_open(url)
         

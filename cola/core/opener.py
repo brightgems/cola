@@ -115,8 +115,7 @@ class MechanizeOpener(Opener):
         self.browser.set_handle_redirect(True)
         self.browser.set_handle_referer(True)
         self.browser.set_handle_robots(False)
-        self.browser.addheaders = [
-            ('User-agent', user_agent)]
+        self.browser.addheaders = [('User-agent', user_agent)]
         
         if timeout is None:
             self._default_timout = mechanize._sockettimeout._GLOBAL_DEFAULT_TIMEOUT
@@ -176,7 +175,7 @@ class MechanizeOpener(Opener):
         self.browser.clear_history()
     
 class SpynnerOpener(Opener):
-    def __init__(self, user_agent=None, **kwargs):
+    def __init__(self, user_agent=None, timeout=30, **kwargs):
         try:
             import spynner
         except ImportError:
@@ -186,7 +185,7 @@ class SpynnerOpener(Opener):
             user_agent = 'Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)'
         
         self.br = spynner.Browser(user_agent=user_agent)
-                
+        self._default_timout = timeout        
 
     def spynner_open(self, url, data=None, headers=None, method='GET', 
                      wait_for_text=None, wait_for_selector=None, tries=None):
@@ -208,7 +207,7 @@ class SpynnerOpener(Opener):
         if method == 'POST':
             operation = QNetworkAccessManager.PostOperation
         self.br.load(url, wait_callback=wait_callback, tries=tries, 
-                     operation=operation, body=data, headers=headers)
+                     operation=operation, body=data, headers=headers,load_timeout= self._default_timout)
         
         return self.br
         
@@ -223,10 +222,12 @@ class SpynnerOpener(Opener):
         return self.content if hasattr(self, 'content') else self.br.contents
     
     def wait_for_selector(self, selector, **kwargs):
-        self.br.wait_for_content(
-            lambda br: not br.webframe.findFirstElement(selector).isNull(), 
+        self.br.wait_for_content(lambda br: not br.webframe.findFirstElement(selector).isNull(), 
             **kwargs)
 
     def add_proxy(self,addr, proxy_type='all',
                   user=None, password=None):
         self.br.set_proxy(addr)
+
+    def set_default_timeout(self, timeout):
+        self._default_timout = timeout

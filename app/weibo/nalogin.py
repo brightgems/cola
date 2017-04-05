@@ -42,16 +42,21 @@ class WeiboLoginFailure(LoginFailure): pass
 class WeiboLogin(object):
     def __init__(self, opener):
         self.opener = opener
-        self.logger = get_logger("weibo.login")
+        self.logger = get_logger("weibo.login","weibo_spider.log")
         
     def login(self):
+        print("**WeiboLogin**")
         uid = random.choice(user_config.job.starts).uid
+        
+        opener = self.opener
         assert isinstance(opener,SpynnerOpener)
+        #opener.br.debug_level=2
+        opener.br.embed_jquery=True
+        opener.set_default_timeout(30)
         try:
-            opener.spynner_open('http://weibo.com/u/%s?is_all=1&_k=%s' % (uid, start),
+            opener.spynner_open('http://weibo.com/u/%s?is_all=1' % uid,headers=[('User-agent', 'Baiduspider+(+http://www.baidu.com/search/spider.htm)')],
                                 wait_for_text = "$CONFIG['page_id']=",tries=2)
-            self.opener.cj = opener.br.cookiejar
-                
+            
             self.logger.info("weibo login successfuly bypass account login")
             return(True)			
         except WeiboLoginFailure:

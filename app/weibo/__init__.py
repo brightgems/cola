@@ -27,36 +27,43 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from cola.core.urls import Url, UrlPatterns
 from cola.job import JobDescription
 
-from nalogin import WeiboLogin
+from nalogin import WeiboLogin as NoAccountLogin
+from login import WeiboLogin as AccountLogin
 from parsers import MicroBlogParser, ForwardCommentLikeParser,\
-                    UserInfoParser, UserFriendParser,UserHomePageParser
+                    UserInfoParser, UserFriendParser
 from conf import starts, user_config, instances
 from bundle import WeiboUserBundle
-from cola.core.opener import SpynnerOpener
+from cola.core.opener import MechanizeOpener,SpynnerOpener
 import random
+from .tools import QT4_Py_Cookie
+from cookielib import MozillaCookieJar
 
 def login_hook(opener, **kw):
-    # Skip login step if detail user profile doesn't need
-    if not getattr(user_config.job.fetch,"userprofile",False):
-        return True
-
-    p = random.choice(user_config.opener.proxys)
-    opener.add_proxy(p['addr'])
     username = str(kw['username'])
     passwd = str(kw['password'])
-    
-    loginer = WeiboLogin(opener)
-    return loginer.login()
+    # Skip login step if detail user profile doesn't need
+    if not getattr(user_config.job.fetch,"userprofile",False):
+        qtbr = SpynnerOpener(user_agent= user_config.conf.opener.user_agent)
+        loginer = NoAccountLogin(qtbr)
+        ret = loginer.login()
+        # copy cookie jar to opener
+        cv = QT4_Py_Cookie()
+        cj = MozillaCookieJar()
+        cv.toPyCookieJar(qtbr.br.cookiejar,cj)
+        opener.br.set_cookiejar(cj)
+    else:
+        loginer = AccountLogin(opener)
+        ret = loginer.login()
+    return ret
 
-url_patterns = UrlPatterns(Url(r'http://www.weibo.com/u/.*', 'user_home_page', UserHomePageParser,priority=1),
-    Url(r'http://weibo.com/p/aj/v6/mblog/mbloglist.*', 'micro_blog', MicroBlogParser, priority=1),
+url_patterns = UrlPatterns(Url(r'http://weibo.com/p/aj/v6/mblog/mbloglist.*', 'micro_blog', MicroBlogParser, priority=1),
     Url(r'http://weibo.com/aj/.+/big.*', 'forward_comment_like', ForwardCommentLikeParser ,priority=2),
     Url(r'http://weibo.com/p/\d+/info', 'user_info', UserInfoParser,priority=1),
     Url(r'http://weibo.com/\d+/follow.*', 'follows', UserFriendParser,priority=2),
     Url(r'http://weibo.com/\d+/fans.*', 'fans', UserFriendParser,priority=2),)
 
 def get_job_desc():
-    return JobDescription('sina weibo crawler', url_patterns, SpynnerOpener, user_config, 
+    return JobDescription('sina weibo crawler', url_patterns, MechanizeOpener, user_config, 
                           starts,unit_cls=WeiboUserBundle, login_hook=login_hook)
     
 if __name__ == "__main__":

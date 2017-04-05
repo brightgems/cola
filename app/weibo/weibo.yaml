@@ -1,5 +1,5 @@
 ﻿opener:
-  user-agent: Baiduspider+(+http://www.baidu.com/search/spider.htm)
+  user_agent: Baiduspider+(+http://www.baidu.com/search/spider.htm)
 job:
   db: sina
   mode: bundle # also can be `bundle`

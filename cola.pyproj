@@ -43,8 +43,12 @@
     <Compile Include="app\weibo\bundle.py" />
     <Compile Include="app\weibo\conf.py" />
     <Compile Include="app\weibo\login.py" />
+    <Compile Include="app\weibo\nalogin.py" />
     <Compile Include="app\weibo\parsers.py" />
     <Compile Include="app\weibo\storage.py" />
+    <Compile Include="app\weibo\tools.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="app\weibo\utils.py" />
     <Compile Include="app\weibo\__init__.py" />
     <Compile Include="app\wiki\__init__.py" />
