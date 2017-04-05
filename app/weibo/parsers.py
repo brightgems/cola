@@ -91,23 +91,28 @@ class UserHomePageParser(WeiboParser):
         
         url = url or self.url
         # add proxy
-        p_ = get_ip_proxy()
+        p_ = None #get_ip_proxy()
         if p_:
             self.opener.remove_proxy()
             self.opener.add_proxy(p_)
 
         br = self.opener.browse_open(url)
-
+        next_url = "https://login.sina.com.cn/visitor/visitor?a=incarnate&t=gdfg4643%2&w=46j&c=ete&gc=4643&cb=cross_domain&from=weibo&_rand=&_rand=" + str(int(time.time() * (10 ** 6)))
+        import urllib
+        next_url = urllib.quote(next_url)
+        br = self.opener.browse_open(next_url)
+        br = self.opener.browse_open(url)
         if not self.check(url, br):
             return
-
+        html_ = br.response().read()
         try:
-            soup = beautiful_soup(br.response().read())
+            soup = beautiful_soup(html_)
         except KeyError:
+            self.logger.error(html_)
             raise FetchBannedError('fetch banned by weibo server')
         
         # find page_id
-        pid_ = re.findall("CONFIG\['page_id'\]='(.*)';")
+        pid_ = re.findall("CONFIG\['page_id'\]='(.*)';",html_)
         if not pid_:
             raise FetchBannedError('fetch banned by weibo server')
 

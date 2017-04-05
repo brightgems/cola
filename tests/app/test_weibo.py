@@ -30,7 +30,7 @@ from cola.core.unit import Bundle
 
 from app.weibo import login_hook
 from app.weibo.parsers import MicroBlogParser, ForwardCommentLikeParser, \
-                                    UserInfoParser, UserFriendParser
+                                    UserInfoParser, UserFriendParser,UserHomePageParser
 from app.weibo.conf import user_config
 from app.weibo.bundle import WeiboUserBundle
 
@@ -42,7 +42,7 @@ class Test(unittest.TestCase):
 
 
     def setUp(self):
-        self.test_uid = '1784725941'
+        self.test_uid = '1667486960'
         self.bundle = WeiboUserBundle(self.test_uid)
         self.opener = MechanizeOpener()
         
@@ -76,6 +76,21 @@ class Test(unittest.TestCase):
             int(time.time() * (10**6))
         )
         parser = MicroBlogParser(opener=self.opener, 
+                                 url=test_url, 
+                                 bundle=self.bundle)
+        _, bundles = self._get_urls_and_bundles(parser.parse())
+           
+        self.assertEqual(len(bundles), 0)
+            
+        size = self.weibos_collection.find({'uid': self.test_uid}).count()
+        self.assertAlmostEqual(size, 15, delta=1)
+
+    def testUserHomePageParser(self):
+        test_url = 'http://weibo.com/u/%s?is_all=1&_k=%s' % (
+            self.test_uid,
+            int(time.time() * (10**6))
+        )
+        parser = UserHomePageParser(opener=self.opener, 
                                  url=test_url, 
                                  bundle=self.bundle)
         _, bundles = self._get_urls_and_bundles(parser.parse())

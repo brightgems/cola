@@ -137,14 +137,10 @@ def get_ip_proxy():
     >>> get_ip_proxy()
     
     '''
-    myipproxy_url = "http://ipmomentum.online/api"
-    rsp = requests.get(myipproxy_url)
+    myipproxy_url = "http://ipmomentum.online/api/proxy/china"
+    rsp = requests.get(myipproxy_url,auth=('eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MX0._6jmLfy5i96Ux_fLqIXwTHySY8rdSjvHGJw5VedbZ1I','unset'))
     lsip_ = json.loads(rsp.text)
-    if len(lsip_) == 0:
-        return
-    rdn_ = random.randint(0,len(lsip_))
-    p_ = lsip_[rdn_]
-    return "%s:%s" % (p_['ip'],p_['port'])
+    return lsip_
     
 if __name__ == "__main__":
     import doctest

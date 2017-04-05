@@ -78,7 +78,7 @@ class WeiboLogin(object):
                 'from': '',
                 'savestate': '7',
                 'userticket': '1',
-				'pagerefer': 'http://login.sina.com.cn/sso/logout.php',
+                'pagerefer': 'http://login.sina.com.cn/sso/logout.php',
                 'vsnf': '1',
                 'su': self.get_user(self.username),
                 'service': 'weibo',
