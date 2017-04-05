@@ -23,6 +23,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Content Include="app\exchange_rate\README.rst" />
+    <Content Include="app\impmaker\requirements.txt" />
+    <Content Include="app\impmaker\impmaker.yaml" />
     <Content Include="app\weibo\README.rst" />
     <Content Include="app\weibo\requirements.txt" />
     <Content Include="app\weibo\weibo.yaml" />
@@ -36,6 +38,8 @@
     <Compile Include="app\exchange_rate\__init__.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="app\impmaker\utils.py" />
+    <Compile Include="app\impmaker\__init__.py" />
     <Compile Include="app\weibo\bundle.py" />
     <Compile Include="app\weibo\conf.py" />
     <Compile Include="app\weibo\login.py" />
@@ -126,6 +130,7 @@
   <ItemGroup>
     <Folder Include="app" />
     <Folder Include="app\exchange_rate\" />
+    <Folder Include="app\impmaker\" />
     <Folder Include="app\weibo" />
     <Folder Include="app\wiki" />
     <Folder Include="cola" />
