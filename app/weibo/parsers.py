@@ -53,9 +53,6 @@ TIMEOUT = 30.0
 
 class WeiboParser(Parser):
     def __init__(self, opener=None, url=None, bundle=None, **kwargs):
-        #if not opener or isinstance(opener,SpynnerOpener):
-        #    opener = MechanizeOpener(user_agent=user_config.conf.opener.user_agent)
-
         super(WeiboParser, self).__init__(opener=opener, url=url, **kwargs)
         self.bundle = bundle
         self.uid = bundle.label
@@ -88,6 +85,32 @@ class WeiboParser(Parser):
             self.bundle.weibo_user.save()
         return self.bundle.weibo_user
 
+class UserHomePageParser(WeiboParser):
+    def parse(self, url=None):
+        if self.bundle.exists is False:
+            return
+        
+        url = url or self.url
+        opener = SpynnerOpener(user_agent=user_config.conf.opener.user_agent)
+        
+
+        opener.spynner_open(url, wait_for_text = "$CONFIG['page_id']=",tries=2)
+            
+
+        # find page_id
+        pid_ = re.findall("CONFIG\['page_id'\]='(.*)';",opener.br.contents)[0]
+        if not pid_:
+            raise FetchBannedError('fetch banned by weibo server')
+
+        domain_ = re.findall("CONFIG\['domain'\]='(.*)';",opener.br.contents)[0]
+
+        self.bundle.pid = pid_
+        self.bundle.domain = domain_
+
+        url = "http://www.weibo.com/p/aj/v6/mblog/mbloglist?ajwvr=6&domain=%s&profile_ftype=1&is_all=1&pagebar=0&pl_name=Pl_Official_MyProfileFeed__21&id=%s&script_uri=/u/%s&feed_type=0&page=1&domain_op=%s&__rnd=1490263820238" \
+                % (domain_,pid_,self.bundle.uid, domain_)
+        yield url
+
 class MicroBlogParser(WeiboParser):
     def parse(self, url=None):
         if self.bundle.exists is False:
@@ -95,13 +118,13 @@ class MicroBlogParser(WeiboParser):
         
         url = url or self.url
         params = urldecode(url)
-        # add proxy
-        if isinstance(self.opener ,MechanizeOpener):
-            p_ = get_ip_proxy()
-            if p_:
-                self.opener.remove_proxy()
-                self.opener.add_proxy(p_)
 
+        # add proxy
+        p_ = get_ip_proxy()
+        #if p_:
+        #    self.opener.remove_proxy()
+        #    self.opener.add_proxy(p_)
+        print(self.opener.cj._cookies)
         br = self.opener.browse_open(url)
         
 #         self.logger.debug('load %s finish' % url)

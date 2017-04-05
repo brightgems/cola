@@ -30,7 +30,7 @@ from cola.core.unit import Bundle
 
 from app.weibo import login_hook
 from app.weibo.parsers import MicroBlogParser, ForwardCommentLikeParser, \
-                                    UserInfoParser, UserFriendParser
+                                    UserInfoParser, UserFriendParser,UserHomePageParser
 from app.weibo.conf import user_config
 from app.weibo.bundle import WeiboUserBundle
 
@@ -45,8 +45,6 @@ class Test(unittest.TestCase):
         self.test_uid = '1667486960'
         self.bundle = WeiboUserBundle(self.test_uid)
         self.opener = MechanizeOpener()
-        self.opener.br.user_agent = "Baiduspider+(+http://www.baidu.com/search/spider.htm)"
-        #self.mbr = MechanizeOpener()
         
         self.conn = MongoClient()
         self.db = self.conn[getattr(user_config.job, 'db')]
@@ -73,8 +71,8 @@ class Test(unittest.TestCase):
         self.conn.close()
         
     def testMicroBlogParser(self):
-        test_url = 'http://weibo.com/p/aj/v6/mblog/mbloglist?uid=%s&_k=%s' % (
-            self.test_uid,
+        test_url = 'http://weibo.com/p/aj/v6/mblog/mbloglist?ajwvr=6&domain=100606&is_hot=1&pl_name=Pl_Official_MyProfileFeed__24&id=1006063949575070&script_uri=/u/3949575070&feed_type=1&page=1&pre_page=1&domain_op=100606&__rnd=%d' % (
+            #self.test_uid,
             int(time.time() * (10**6))
         )
         parser = MicroBlogParser(opener=self.opener, 
@@ -88,19 +86,19 @@ class Test(unittest.TestCase):
         self.assertAlmostEqual(size, 15, delta=1)
 
     def testUserHomePageParser(self):
-        test_url = 'http://weibo.com/u/%s?is_all=1&_k=%s' % (
+        test_url = 'http://weibo.com/%s?is_all=1&_k=%s' % (
             self.test_uid,
             int(time.time() * (10**6))
         )
+        print(self.opener.cj._cookies)
         parser = UserHomePageParser(opener=self.opener, 
                                  url=test_url, 
                                  bundle=self.bundle)
-        _, bundles = self._get_urls_and_bundles(parser.parse())
+        urls, bundles = self._get_urls_and_bundles(parser.parse())
            
-        self.assertEqual(len(bundles), 0)
-            
-        size = self.weibos_collection.find({'uid': self.test_uid}).count()
-        self.assertAlmostEqual(size, 15, delta=1)
+        self.assertEqual(len(urls), 1)
+        print(urls)
+         
         
     def testMicroBlogForwardsParser(self):
         test_url = 'http://weibo.com/aj/mblog/info/big?id=3596988739933218&_t=0&__rnd=1373094212593'

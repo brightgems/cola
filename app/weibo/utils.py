@@ -132,15 +132,22 @@ def get_avatar_size_url(img_url, size=50):
     splits[-3] = str(size)
     return '/'.join(splits)
 
+
+lshttp_ = None
 def get_ip_proxy():
     '''
     >>> get_ip_proxy()
     
     '''
-    myipproxy_url = "http://ipmomentum.online/api/proxy/china"
-    rsp = requests.get(myipproxy_url,auth=('eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MX0._6jmLfy5i96Ux_fLqIXwTHySY8rdSjvHGJw5VedbZ1I','unset'))
-    lsip_ = json.loads(rsp.text)
-    return lsip_
+    global lshttp_
+    if not lshttp_:
+        myipproxy_url = "http://ipmomentum.online/api/proxy/china"
+        rsp = requests.get(myipproxy_url,auth=('eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MX0._6jmLfy5i96Ux_fLqIXwTHySY8rdSjvHGJw5VedbZ1I','unset'))
+        proxys = json.loads(rsp.text)
+        lshttp_ =  [p_ for p_ in proxys if p_['type']!='https']
+    
+    p_=random.choice(lshttp_)
+    return p_['addr']
     
 if __name__ == "__main__":
     import doctest

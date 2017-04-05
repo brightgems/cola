@@ -29,7 +29,8 @@ class WeiboUserBundle(Bundle):
     def __init__(self, uid):
         super(WeiboUserBundle, self).__init__(uid)
         self.uid = uid
-        self.page_id = None
+        self.pid = None
+        self.domain = None
         self.exists = True
         
         self.last_error_page = None
@@ -44,7 +45,7 @@ class WeiboUserBundle(Bundle):
         start = int(time.time() * (10 ** 6))
         urls_ = [
             # 微博主页
-            'http://weibo.com/p/aj/v6/mblog/mbloglist?uid=%s&is_all=1&_k=%s' % (self.uid, start),
+            'http://weibo.com/%s?is_all=1&_k=%s' % (self.uid, start),
         ]
         if fetch_userprofile:
             urls.append('http://weibo.com/%s/info' % self.uid) # only apply for personal account

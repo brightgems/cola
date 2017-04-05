@@ -35,7 +35,7 @@ from conf import starts, user_config, instances
 from bundle import WeiboUserBundle
 from cola.core.opener import MechanizeOpener,SpynnerOpener
 import random
-from .tools import QT4_Py_Cookie
+from tools import QT4_Py_Cookie
 from cookielib import MozillaCookieJar
 
 def login_hook(opener, **kw):
@@ -50,13 +50,15 @@ def login_hook(opener, **kw):
         cv = QT4_Py_Cookie()
         cj = MozillaCookieJar()
         cv.toPyCookieJar(qtbr.br.cookiejar,cj)
-        opener.br.set_cookiejar(cj)
+        opener.cj = cj
+        opener.browser.set_cookiejar(cj)
+        opener.browser.addheaders = [('User-agent', user_config.conf.opener.user_agent)]
     else:
         loginer = AccountLogin(opener)
         ret = loginer.login()
     return ret
 
-url_patterns = UrlPatterns(Url(r'http://weibo.com/p/aj/v6/mblog/mbloglist.*', 'micro_blog', MicroBlogParser, priority=1),
+url_patterns = UrlPatterns(Url('http://weibo.com/p/aj/v6/mblog/mbloglist.*', 'micro_blog', MicroBlogParser, priority=1),
     Url(r'http://weibo.com/aj/.+/big.*', 'forward_comment_like', ForwardCommentLikeParser ,priority=2),
     Url(r'http://weibo.com/p/\d+/info', 'user_info', UserInfoParser,priority=1),
     Url(r'http://weibo.com/\d+/follow.*', 'follows', UserFriendParser,priority=2),
