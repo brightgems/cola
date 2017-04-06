@@ -42,7 +42,7 @@ class WeiboLoginFailure(LoginFailure): pass
 class WeiboLogin(object):
     def __init__(self, opener):
         self.opener = opener
-        self.logger = get_logger("weibo.login","weibo_spider.log")
+        self.logger = get_logger("weibo.login")
         
     def login(self):
         print("**WeiboLogin**")

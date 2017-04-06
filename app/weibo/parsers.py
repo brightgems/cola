@@ -41,13 +41,14 @@ from storage import DoesNotExist, Q, WeiboUser, Friend,\
 
 from conf import fetch_forward, fetch_comment, fetch_like,fetch_userprofile,effective_start_date
 
-from utils import get_ip_proxy
-from conf import user_config
+from utils import get_ip_proxy,parse_datetime
+from conf import user_config,user_agent
 
 try:
     from dateutil.parser import parse
 except ImportError:
     raise DependencyNotInstalledError('python-dateutil')
+
 
 TIMEOUT = 30.0
 
@@ -57,9 +58,11 @@ class WeiboParser(Parser):
         self.bundle = bundle
         self.uid = bundle.label
         self.opener.set_default_timeout(TIMEOUT)
-
+        print(user_agent)
+        
         if not hasattr(self, 'logger') or self.logger is None:
             self.logger = get_logger(name='weibo_parser')
+    
     
     def _check_url(self, dest_url, src_url):
         return dest_url.split('?')[0] == src_url.split('?')[0]
@@ -124,7 +127,7 @@ class MicroBlogParser(WeiboParser):
         #if p_:
         #    self.opener.remove_proxy()
         #    self.opener.add_proxy(p_)
-        print(self.opener.cj._cookies)
+        
         br = self.opener.browse_open(url)
         
 #         self.logger.debug('load %s finish' % url)
@@ -167,7 +170,7 @@ class MicroBlogParser(WeiboParser):
             if len(mid) == 0:
                 continue
             max_id = mid
-            blog_create_date = parse(div.select('a.S_link2.WB_time')[0]['title'])
+            blog_create_date = parse(div.select("a[node-type='feed_list_item_date']")[0]['title'])
             # skip all following blogs if create date less than effective start
             # date
             if (blog_create_date - effective_start_date).days < 0:
@@ -203,11 +206,9 @@ class MicroBlogParser(WeiboParser):
                 tbinfos = div['tbinfo'].split('&')
                 mblog.ouid = tbinfos[0].split('=')[1]
                 name_a = div.find('a', attrs={
-                    'class': 'WB_name', 
                     'node-type': 'feed_list_originNick' 
                 })
                 text_a = div.find('div', attrs={
-                    'class': 'WB_text',
                     'node-type': 'feed_list_reason'
                 })
                 if name_a is not None and text_a is not None:
@@ -222,26 +223,22 @@ class MicroBlogParser(WeiboParser):
                 mblog.created + effective_start_date <= weibo_user.last_update:
                 finished = True
                 break
-
-            func_div = div.find_all('div', 'WB_func')[-1]
+            # 评论转发数量
+            func_div = div.find('div', attrs = {'node-type':'feed_list_options'})
+            
             action_type_re = lambda t: re.compile("^(feed_list|fl)_%s$" % t)
             
-            likes = func_div.find('a', attrs={'action-type': action_type_re("like")}).text
-            likes = likes.strip('(').strip(')')
-            likes = 0 if len(likes) == 0 else int(likes)
+            
+            forwards = func_div.find('a', attrs={'action-type': action_type_re("forward")}).find_all('em')[1].text
+            mblog.n_forwards = int(forwards.strip()) if unicode.isnumeric(forwards) else 0
+            comments = func_div.find('a', attrs={'action-type': action_type_re('comment')}).find_all('em')[1].text
+            mblog.n_comments = int(comments.strip()) if unicode.isnumeric(comments) else 0
+            # 由于没有登陆，没有fl_like
+            likes = func_div.find('span', attrs={'node-type': 'like_status'}).find_all('em')[1].text
+            likes = int(likes.strip()) if unicode.isnumeric(likes) else  0
             mblog.n_likes = likes
-            forwards = func_div.find('a', attrs={'action-type': action_type_re("forward")}).text
-            if '(' not in forwards:
-                mblog.n_forwards = 0
-            else:
-                mblog.n_forwards = int(forwards.strip().split('(', 1)[1].strip(')'))
-            comments = func_div.find('a', attrs={'action-type': action_type_re('comment')}).text
-            if '(' not in comments:
-                mblog.n_comments = 0
-            else:
-                mblog.n_comments = int(comments.strip().split('(', 1)[1].strip(')'))
-                
-            # fetch geo info
+
+            # fetch geo info, 基本拿不到
             map_info = div.find("div", attrs={'class': 'map_data'})
             if map_info is not None:
                 geo = Geo()
@@ -252,18 +249,20 @@ class MicroBlogParser(WeiboParser):
             
             # fetch forwards and comments
             if fetch_forward or fetch_comment or fetch_like:
-                query = {'id': mid, '_t': 0, '__rnd': int(time.time() * 1000)}
+                query = {'ajwvr':6,'id': mid, '_t': 0,'from':'singleWeiBo', '__rnd': int(time.time() * 1000)}
                 query_str = urllib.urlencode(query)
                 if fetch_forward and mblog.n_forwards > 0:
-                    forward_url = 'http://weibo.com/aj/mblog/info/big?%s' % query_str
+                    forward_url = 'http://www.weibo.com/aj/v6/mblog/info/big?%s' % query_str
+                    
                     yield forward_url
                 if fetch_comment and mblog.n_comments > 0:
-                    comment_url = 'http://weibo.com/aj/comment/big?%s' % query_str
+                    comment_url = 'http://www.weibo.com/aj/v6/comment/big?%s' % query_str
+                    print(comment_url)
                     yield comment_url
                 if fetch_like and mblog.n_likes > 0:
                     query = {'mid': mid, '_t': 0, '__rnd': int(time.time() * 1000)}
                     query_str = urllib.urlencode(query)
-                    like_url = 'http://weibo.com/aj/like/big?%s' % query_str
+                    like_url = 'http://www.weibo.com/aj/v6/like/big?%s' % query_str
                     yield like_url
             
             mblog.save()
@@ -273,9 +272,6 @@ class MicroBlogParser(WeiboParser):
         else:
             del params['max_id']
 #         self.logger.debug('parse %s finish' % url)
-
-        # counter add one for the processed weibo list url
-        self.counter.inc('processed_weibo_list_page', 1)
 
         # if not has next page
         if len(divs) == 0 or finished:
@@ -301,26 +297,7 @@ class ForwardCommentLikeParser(WeiboParser):
         finally:
             self.strptime_lock.release()
         
-    def parse_datetime(self, dt_str):
-        dt = None
-        if u'秒' in dt_str:
-            sec = int(dt_str.split(u'秒', 1)[0].strip())
-            dt = datetime.now() - timedelta(seconds=sec)
-        elif u'分钟' in dt_str:
-            sec = int(dt_str.split(u'分钟', 1)[0].strip()) * 60
-            dt = datetime.now() - timedelta(seconds=sec)
-        elif u'今天' in dt_str:
-            dt_str = dt_str.replace(u'今天', datetime.now().strftime('%Y-%m-%d'))
-            dt = self._strptime(dt_str, '%Y-%m-%d %H:%M')
-        elif u'月' in dt_str and u'日' in dt_str:
-            this_year = datetime.now().year
-            date_str = '%s %s' % (this_year, dt_str)
-            if isinstance(date_str, unicode):
-                date_str = date_str.encode('utf-8')
-            dt = self._strptime(date_str, '%Y %m月%d日 %H:%M')
-        else:
-            dt = parse(dt_str)
-        return dt
+
     
     def parse(self, url=None):
         if self.bundle.exists is False:
@@ -329,12 +306,14 @@ class ForwardCommentLikeParser(WeiboParser):
         url = url or self.url
         # add proxy
         p_ = get_ip_proxy()
-        if p_:
-            self.opener.remove_proxy()
-            self.opener.add_proxy(p_)
-
-        br = self.opener.browse_open(url)
         
+        #if p_:
+        #    self.opener.remove_proxy()
+        #    self.opener.add_proxy(p_,'http')
+        print(url)
+        print(self.opener.cj._cookies)
+        br = self.opener.browse_open(url)
+        print(br.response().read())
         try:
             jsn = json.loads(br.response().read())
         except ValueError:
@@ -367,7 +346,7 @@ class ForwardCommentLikeParser(WeiboParser):
             # instance.avatar = dl.find('dt').find('img')['src']
             date = dl.find('dd').find(attrs={'class': 'S_txt2'}).text
             date = date.strip().strip('(').strip(')')
-            instance.created = self.parse_datetime(date)
+            instance.created = parse_datetime(date)
             for div in dl.find_all('div'): div.extract()
             for span in dl.find_all('span'): span.extract()
             instance.content = dl.text.strip()
