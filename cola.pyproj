@@ -25,9 +25,12 @@
     <Content Include="app\exchange_rate\README.rst" />
     <Content Include="app\impmaker\requirements.txt" />
     <Content Include="app\impmaker\impmaker.yaml" />
-    <Content Include="app\weibo\README.rst" />
-    <Content Include="app\weibo\requirements.txt" />
-    <Content Include="app\weibo\weibo.yaml" />
+    <Content Include="app\weibo_audience\README.rst" />
+    <Content Include="app\weibo_audience\requirements.txt" />
+    <Content Include="app\weibo_audience\weibo.yaml" />
+    <Content Include="app\weibo_post\README.rst" />
+    <Content Include="app\weibo_post\requirements.txt" />
+    <Content Include="app\weibo_post\weibo.yaml" />
     <Content Include="app\wiki\requirements.txt" />
     <Content Include="app\wiki\wiki.yaml" />
     <Content Include="cola\conf\main.yaml" />
@@ -40,17 +43,24 @@
     </Compile>
     <Compile Include="app\impmaker\utils.py" />
     <Compile Include="app\impmaker\__init__.py" />
-    <Compile Include="app\weibo\bundle.py" />
-    <Compile Include="app\weibo\conf.py" />
-    <Compile Include="app\weibo\login.py" />
-    <Compile Include="app\weibo\nalogin.py" />
-    <Compile Include="app\weibo\parsers.py" />
-    <Compile Include="app\weibo\storage.py" />
-    <Compile Include="app\weibo\tools.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="app\weibo\utils.py" />
-    <Compile Include="app\weibo\__init__.py" />
+    <Compile Include="app\weibo_audience\bundle.py" />
+    <Compile Include="app\weibo_audience\conf.py" />
+    <Compile Include="app\weibo_audience\login.py" />
+    <Compile Include="app\weibo_audience\nalogin.py" />
+    <Compile Include="app\weibo_audience\parsers.py" />
+    <Compile Include="app\weibo_audience\storage.py" />
+    <Compile Include="app\weibo_audience\tools.py" />
+    <Compile Include="app\weibo_audience\utils.py" />
+    <Compile Include="app\weibo_audience\__init__.py" />
+    <Compile Include="app\weibo_post\bundle.py" />
+    <Compile Include="app\weibo_post\conf.py" />
+    <Compile Include="app\weibo_post\login.py" />
+    <Compile Include="app\weibo_post\nalogin.py" />
+    <Compile Include="app\weibo_post\parsers.py" />
+    <Compile Include="app\weibo_post\storage.py" />
+    <Compile Include="app\weibo_post\tools.py" />
+    <Compile Include="app\weibo_post\utils.py" />
+    <Compile Include="app\weibo_post\__init__.py" />
     <Compile Include="app\wiki\__init__.py" />
     <Compile Include="app\__init__.py" />
     <Compile Include="cola\cluster\master.py" />
@@ -135,7 +145,8 @@
     <Folder Include="app" />
     <Folder Include="app\exchange_rate\" />
     <Folder Include="app\impmaker\" />
-    <Folder Include="app\weibo" />
+    <Folder Include="app\weibo_post\" />
+    <Folder Include="app\weibo_audience\" />
     <Folder Include="app\wiki" />
     <Folder Include="cola" />
     <Folder Include="cola\cluster" />
