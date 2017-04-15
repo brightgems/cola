@@ -51,6 +51,7 @@ def login_hook(opener, **kw):
         cj = MozillaCookieJar()
         cv.toPyCookieJar(qtbr.br.cookiejar,cj)
         opener.cj = cj
+        opener.qtcj = qtbr.br.cookiejar
         opener.browser.set_cookiejar(cj)
         opener.browser.addheaders = [('User-agent', user_config.conf.opener.user_agent)]
     else:

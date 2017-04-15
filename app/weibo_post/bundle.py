@@ -44,10 +44,8 @@ class WeiboUserBundle(Bundle):
     def urls(self):
         start = int(time.time() * (10 ** 6))
         urls_ = [
-            # 微博主页
-            'http://weibo.com/%s?is_all=1&_k=%s' % (self.uid, start),
+            # blog batch
+            'http://weibo.com/aj/mblog/mbloglist?uid=%s&_k=%s' % (self.uid, start),
         ]
-        if fetch_userprofile:
-            urls.append('http://weibo.com/%s/info' % self.uid) # only apply for personal account
-            urls.append('http://weibo.com/%s/follow' % self.uid)
+        
         return urls_

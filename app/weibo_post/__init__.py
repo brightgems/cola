@@ -27,45 +27,28 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from cola.core.urls import Url, UrlPatterns
 from cola.job import JobDescription
 
-from nalogin import WeiboLogin as NoAccountLogin
 from login import WeiboLogin as AccountLogin
-from parsers import MicroBlogParser, ForwardCommentLikeParser,\
-                    UserInfoParser, UserFriendParser
+from parsers import MicroBlogParser
 from conf import starts, user_config, instances
 from bundle import WeiboUserBundle
-from cola.core.opener import MechanizeOpener,SpynnerOpener
+from cola.core.opener import MechanizeOpener
 import random
-from tools import QT4_Py_Cookie
-from cookielib import MozillaCookieJar
 
 def login_hook(opener, **kw):
     username = str(kw['username'])
     passwd = str(kw['password'])
-    # Skip login step if detail user profile doesn't need
-    if not getattr(user_config.job.fetch,"userprofile",False):
-        qtbr = SpynnerOpener(user_agent= user_config.conf.opener.user_agent)
-        loginer = NoAccountLogin(qtbr)
-        ret = loginer.login()
-        # copy cookie jar to opener
-        cv = QT4_Py_Cookie()
-        cj = MozillaCookieJar()
-        cv.toPyCookieJar(qtbr.br.cookiejar,cj)
-        opener.cj = cj
-        opener.browser.set_cookiejar(cj)
-        opener.browser.addheaders = [('User-agent', user_config.conf.opener.user_agent)]
-    else:
-        loginer = AccountLogin(opener)
-        ret = loginer.login()
+    
+    loginer = AccountLogin(opener,username,passwd)
+    ret = loginer.login()
+
     return ret
 
-url_patterns = UrlPatterns(Url('http://weibo.com/p/aj/v6/mblog/mbloglist.*', 'micro_blog', MicroBlogParser, priority=1),
-    Url(r'http://weibo.com/aj/.+/big.*', 'forward_comment_like', ForwardCommentLikeParser ,priority=2),
-    Url(r'http://weibo.com/p/\d+/info', 'user_info', UserInfoParser,priority=1),
-    Url(r'http://weibo.com/\d+/follow.*', 'follows', UserFriendParser,priority=2),
-    Url(r'http://weibo.com/\d+/fans.*', 'fans', UserFriendParser,priority=2),)
+url_patterns = UrlPatterns(
+        Url(r'http://weibo.com/aj/mblog/mbloglist.*', 'micro_blog', MicroBlogParser, priority=1),
+    )
 
 def get_job_desc():
-    return JobDescription('sina weibo crawler', url_patterns, MechanizeOpener, user_config, 
+    return JobDescription('sina weibo blog spider', url_patterns, MechanizeOpener, user_config, 
                           starts,unit_cls=WeiboUserBundle, login_hook=login_hook)
     
 if __name__ == "__main__":

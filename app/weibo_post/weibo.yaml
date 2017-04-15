@@ -9,9 +9,9 @@ job:
     single: -1 # max restrictions to a single instance
     adaptive: no
   instances: 1
-  priorities: 3 # priorities queue count in mq
+  priorities: 0 # priorities queue count in mq
   copies: 1 # redundant size of objects in mq
-  inc: yes
+  inc: no
   shuffle: no # only work in bundle mode, means the urls in a bundle will shuffle before fetching
   error:
     network:
@@ -53,5 +53,5 @@ job:
     comment: yes
     like: yes
     userprofile: no
-  clear: no
+  clear: yes
   effectivedaterange: 1M

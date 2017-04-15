@@ -96,7 +96,7 @@ class UserHomePageParser(WeiboParser):
         url = url or self.url
         opener = SpynnerOpener(user_agent=user_config.conf.opener.user_agent)
         
-
+        opener.br.set_proxy(self.opener.qtcj)
         opener.spynner_open(url, wait_for_text = "$CONFIG['page_id']=",tries=2)
             
 

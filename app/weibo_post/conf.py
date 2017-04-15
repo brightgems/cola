@@ -59,15 +59,14 @@ from datetime import timedelta
 from datetime import datetime
 
 effectivedatedelta = None
-if hasattr(user_config,"effectivedaterange") and str.isdigit(user_config.effectivedaterange[:-1]):
-    if user_config.effectivedaterange.lower().endswith("m"):
-        effectivedatedelta= timedelta(days= 30* int(user_config.effectivedaterange[:-1]))
-    elif user_config.effectivedaterange.lower().endswith("d"):
-        effectivedatedelta= timedelta(days= int(user_config.effectivedaterange[:-1]))
+if hasattr(user_config.job,"effectivedaterange") and str.isdigit(user_config.job.effectivedaterange[:-1]):
+    if user_config.job.effectivedaterange.lower().endswith("m"):
+        effectivedatedelta= timedelta(days= 30* int(user_config.job.effectivedaterange[:-1]))
+    elif user_config.job.effectivedaterange.lower().endswith("d"):
+        effectivedatedelta= timedelta(days= int(user_config.job.effectivedaterange[:-1]))
 if not effectivedatedelta:
     effectivedatedelta = timedelta(days=90)
 
 effective_start_date = datetime.today() - effectivedatedelta
-
 
 
