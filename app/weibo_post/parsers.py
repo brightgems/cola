@@ -214,22 +214,6 @@ class MicroBlogParser(WeiboParser):
                 geo.longtitude, geo.latitude = tuple([float(itm) for itm in geo_info.split(',', 1)])
                 mblog.geo = geo
             
-            # fetch forwards and comments
-            if fetch_forward or fetch_comment or fetch_like:
-                query = {'id': mid, '_t': 0, '__rnd': int(time.time() * 1000)}
-                query_str = urllib.urlencode(query)
-                if fetch_forward and mblog.n_forwards > 0:
-                    forward_url = 'http://weibo.com/aj/mblog/info/big?%s' % query_str
-                    yield forward_url
-                if fetch_comment and mblog.n_comments > 0:
-                    comment_url = 'http://weibo.com/aj/comment/big?%s' % query_str
-                    yield comment_url
-                if fetch_like and mblog.n_likes > 0:
-                    query = {'mid': mid, '_t': 0, '__rnd': int(time.time() * 1000)}
-                    query_str = urllib.urlencode(query)
-                    like_url = 'http://weibo.com/aj/like/big?%s' % query_str
-                    yield like_url
-            
             mblog.save()
         
         if 'pagebar' in params:

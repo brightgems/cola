@@ -64,9 +64,8 @@ class Task(object):
         self.n_priorities = self.settings.job.priorities
         # the last one is the inc mq if inc=True
         self.full_priorities = self.n_priorities if not self.inc else \
-                                self.n_priorities+1
-        self.priorities_secs = tuple(
-            [MAX_RUNNING_SECONDS/(2**i) for i in range(self.full_priorities)])
+                                self.n_priorities + 1
+        self.priorities_secs = tuple([MAX_RUNNING_SECONDS / (2 ** i) for i in range(self.full_priorities)])
         self.priorities_objs = [[] for _ in range(self.full_priorities)]
         self.starts = []
         
@@ -119,7 +118,7 @@ class Task(object):
         
         if self.is_local:
             size = self.job_desc.settings.job.size
-            if size < 0:
+            if size == 'auto' or size < 0:
                 return
             
             for obj in self.starts[size:]:
@@ -223,8 +222,7 @@ class Task(object):
                         else:
                             priority_deals[curr_priority] = True
                         if self.is_bundle:
-                            self.logger.debug(
-                                'process bundle from priority %s' % priority_name)
+                            self.logger.debug('process bundle from priority %s' % priority_name)
                             rest = min(last - clock.clock(), MAX_BUNDLE_RUNNING_SECONDS)
                             if rest <= 0:
                                 break
@@ -241,7 +239,7 @@ class Task(object):
                 finally:
                     self.priorities_objs[curr_priority].extend(self.runnings)
                     
-                curr_priority = (curr_priority+1) % self.full_priorities
+                curr_priority = (curr_priority + 1) % self.full_priorities
         finally:
             self.counter_client.sync()
             self.save()

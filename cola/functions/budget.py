@@ -35,6 +35,7 @@ FUNC_PREFIX = "budget_apply_"
 SUFFICIENT, NOAPPLIED, ALLFINISHED = range(3)
 DEFAULT_BUDGETS = 3
 BUDGET_APPLY_STATUS_FILENAME = 'budget.apply.status'
+AUTO_BUDGET = 'auto'
 
 def synchronized(func):
     def inner(self, *args, **kw):
@@ -50,8 +51,11 @@ class BudgetApplyServer(object):
         self.settings = settings
         self.rpc_server = rpc_server
         self.app_name = app_name
-        
-        self.budgets = settings.job.size
+        # check if auto budget setting enabled
+        if settings.job.size == AUTO_BUDGET:
+            self.budgets = len(settings.job.starts)
+        else:
+            self.budgets = settings.job.size
         self.limit = self.budgets >= 0
         self.applied = 0
         self.finished = 0
@@ -73,11 +77,11 @@ class BudgetApplyServer(object):
     def register_rpc(cls, budget_server, rpc_server, app_name=None):
         prefix = get_rpc_prefix(app_name=app_name, prefix=FUNC_PREFIX)
         rpc_server.register_function(budget_server.set_budgets, 
-                                     name='set_budgets', prefix=prefix)
+                                     name='set_budget', prefix=prefix)
         rpc_server.register_function(budget_server.inc_budgets, 
-                                     name='inc_budgets', prefix=prefix)
+                                     name='inc_budget', prefix=prefix)
         rpc_server.register_function(budget_server.dec_budgets, 
-                                     name='dec_budgets', prefix=prefix)
+                                     name='dec_budget', prefix=prefix)
         rpc_server.register_function(budget_server.apply, 
                                      name='apply', prefix=prefix)
         rpc_server.register_function(budget_server.finish, 
@@ -117,19 +121,19 @@ class BudgetApplyServer(object):
                 self.applied, self.finished = pickle.load(f)
         
     @synchronized
-    def set_budgets(self, budgets):
+    def set_budget(self, budgets):
         self.budgets = budgets
         self.limit = self.budgets >= 0
         self.set_status()
     
     @synchronized
-    def inc_budgets(self, budgets):
+    def inc_budget(self, budgets):
         if self.limit:
             self.budgets += budgets
             self.set_status()
         
     @synchronized
-    def dec_budgets(self, budgets):
+    def dec_budget(self, budgets):
         if self.limit:
             self.budgets -= budgets
             self.set_status()
