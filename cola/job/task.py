@@ -202,17 +202,20 @@ class Task(object):
                                 no_budgets_times = 0
                                 self._get_unit(curr_priority, self.runnings)
                             else:
-                                status = self._apply(no_budgets_times)
-                                if status == CANNOT_APPLY:
-                                    priority_deals[curr_priority] = False
-                                    break
-                                elif status == APPLY_FAIL:
-                                    no_budgets_times += 1
-                                    if len(self.runnings) == 0:
-                                        continue
-                                else:
-                                    no_budgets_times = 0
-                                    self._get_unit(curr_priority, self.runnings)
+                                self._get_unit(curr_priority, self.runnings)
+                                # if get unit success, then apply budget, in case budget are wasted
+                                if len(self.runnings)>0:
+                                    status = self._apply(no_budgets_times)
+                                    if status == CANNOT_APPLY:
+                                        priority_deals[curr_priority] = False
+                                        break
+                                    elif status == APPLY_FAIL:
+                                        no_budgets_times += 1
+                                        if len(self.runnings) == 0:
+                                            continue
+                                    else:
+                                        no_budgets_times = 0
+                                    
                         else:
                             self._get_unit(curr_priority, self.runnings)
                             
