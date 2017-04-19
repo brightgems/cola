@@ -28,7 +28,7 @@ from cola.core.urls import Url, UrlPatterns
 from cola.job import JobDescription
 
 from login import WeiboLogin as AccountLogin
-from parsers import MicroBlogParser
+from parsers import MicroBlogParser, ForwardCommentLikeParser,UserInfoParser,UserHomePageParser
 from conf import starts, user_config, instances
 from bundle import WeiboUserBundle
 from cola.core.opener import MechanizeOpener
@@ -44,8 +44,10 @@ def login_hook(opener, **kw):
     return ret
 
 url_patterns = UrlPatterns(
-        Url(r'http://weibo.com/aj/mblog/mbloglist.*', 'micro_blog', MicroBlogParser, priority=1),
-    )
+        Url('http://weibo.com/\d+\?.*', 'user_home', UserHomePageParser, priority=0),
+        Url('http://weibo.com/p/aj/v6/mblog/mbloglist.*', 'micro_blog', MicroBlogParser, priority=1),
+        Url(r'http://weibo.com/p/\d+/info', 'user_info', UserInfoParser,priority=1),
+        Url(r'http://weibo.com/aj/.+/big.*', 'forward_comment_like', ForwardCommentLikeParser ,priority=2),)
 
 def get_job_desc():
     return JobDescription('sina weibo blog spider', url_patterns, MechanizeOpener, user_config, 

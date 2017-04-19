@@ -127,6 +127,7 @@ class Friend(EmbeddedDocument):
     
 class WeiboUser(Document):
     uid = StringField(required=True)
+    pid = StringField(required=False)
     last_update = DateTimeField()
     newest_mids = ListField(StringField())
     
