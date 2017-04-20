@@ -77,6 +77,7 @@ class MicroBlog(Document):
     forwards = ListField(EmbeddedDocumentField(Forward)) 
     n_comments = IntField()
     comments = ListField(EmbeddedDocumentField(Comment))
+    has_video = BooleanField()
 
     last_update = DateTimeField()
     meta = {
@@ -108,12 +109,14 @@ class UserInfo(EmbeddedDocument):
     verified = BooleanField()
     vip = BooleanField()
     level_score = IntField() # 经验值
+    level = IntField() # 等级
     email = EmailField()
     qq = StringField()
     msn = StringField()
     register_date = DateTimeField()
     n_follows = IntField()
     n_fans = IntField()
+    n_msgs = IntField()
     is_person = BooleanField()
     
     edu = ListField(EmbeddedDocumentField(EduInfo))

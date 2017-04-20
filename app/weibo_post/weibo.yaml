@@ -8,7 +8,7 @@ job:
     max: -1  # to the cluster, -1 means no restrictions, if greater than 0, means webpages opened per minute
     single: -1 # max restrictions to a single instance
     adaptive: no
-  instances: 1
+  instances: 4
   priorities: 3 # priorities queue count in mq
   copies: 1 # redundant size of objects in mq
   inc: no
@@ -51,7 +51,7 @@ job:
   fetch:
     forward: yes
     comment: yes
-    like: yes
-    userprofile: yes
+    like: no
+    userprofile: no
   clear: yes
   effectivedaterange: 1M
