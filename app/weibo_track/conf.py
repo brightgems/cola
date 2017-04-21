@@ -70,4 +70,3 @@ if not effectivedatedelta:
 effective_start_date = datetime.today() - effectivedatedelta
 
 
-

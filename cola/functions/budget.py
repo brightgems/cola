@@ -77,11 +77,11 @@ class BudgetApplyServer(object):
     def register_rpc(cls, budget_server, rpc_server, app_name=None):
         prefix = get_rpc_prefix(app_name=app_name, prefix=FUNC_PREFIX)
         rpc_server.register_function(budget_server.set_budgets, 
-                                     name='set_budget', prefix=prefix)
+                                     name='set_budgets', prefix=prefix)
         rpc_server.register_function(budget_server.inc_budgets, 
-                                     name='inc_budget', prefix=prefix)
+                                     name='inc_budgets', prefix=prefix)
         rpc_server.register_function(budget_server.dec_budgets, 
-                                     name='dec_budget', prefix=prefix)
+                                     name='dec_budgets', prefix=prefix)
         rpc_server.register_function(budget_server.apply, 
                                      name='apply', prefix=prefix)
         rpc_server.register_function(budget_server.finish, 
@@ -121,19 +121,19 @@ class BudgetApplyServer(object):
                 self.applied, self.finished = pickle.load(f)
         
     @synchronized
-    def set_budget(self, budgets):
+    def set_budgets(self, budgets):
         self.budgets = budgets
         self.limit = self.budgets >= 0
         self.set_status()
     
     @synchronized
-    def inc_budget(self, budgets):
+    def inc_budgets(self, budgets):
         if self.limit:
             self.budgets += budgets
             self.set_status()
         
     @synchronized
-    def dec_budget(self, budgets):
+    def dec_budgets(self, budgets):
         if self.limit:
             self.budgets -= budgets
             self.set_status()
@@ -182,11 +182,11 @@ class BudgetApplyClient(object):
     def error(self, size=1):
         return self._call('error', size)
     
-    def set_budget(self, budget):
-        return self._call('set_budget', budget)
+    def set_budgets(self, budget):
+        return self._call('set_budgets', budget)
     
-    def inc_budget(self, budget):
-        return self._call('inc_budget', budget)
+    def inc_budgets(self, budget):
+        return self._call('inc_budgets', budget)
     
-    def dec_budget(self, budget):
-        return self._call('dec_budget', budget)
+    def dec_budgets(self, budget):
+        return self._call('dec_budgets', budget)

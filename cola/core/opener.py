@@ -116,7 +116,8 @@ class MechanizeOpener(Opener):
         self.browser.set_handle_referer(True)
         self.browser.set_handle_robots(False)
         self.browser.addheaders = [('User-agent', user_agent)]
-        
+        self.proxies = {}
+
         if timeout is None:
             self._default_timout = mechanize._sockettimeout._GLOBAL_DEFAULT_TIMEOUT
         else:

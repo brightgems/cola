@@ -350,7 +350,7 @@ class UrlExecutor(Executor):
         else:
             # dec budget if auto budget enabled
             if self.settings.job.size == 'auto':
-                self.budget_client.dec_budget(1)
+                self.budget_client.dec_budgets(1)
             return
 
     def _clear_error(self, url):
@@ -421,7 +421,7 @@ class UrlExecutor(Executor):
                     if self.settings.job.size == 'auto':
                         inc_budgets = len(next_urls)
                         if inc_budgets>0:
-                            self.budget_client.inc_budget(inc_budgets)
+                            self.budget_client.inc_budgets(inc_budgets)
                 if hasattr(self.opener, 'close'):
                     self.opener.close()
                     
@@ -506,7 +506,7 @@ class BundleExecutor(Executor):
                 bundle.error_urls.append(url)
                 # dec budget if auto budget enabled
                 if self.settings.job.size == 'auto':
-                    self.budget_client.dec_budget(1)
+                    self.budget_client.dec_budgets(1)
                 return
             else:
                 bundle.current_urls.insert(0, url)
@@ -607,7 +607,7 @@ class BundleExecutor(Executor):
                         if self.settings.job.size == 'auto':
                             inc_budgets = len(bundles)
                             if inc_budgets>0:
-                                self.budget_client.inc_budget(inc_budgets)
+                                self.budget_client.inc_budgets(inc_budgets)
 
                     if hasattr(self.opener, 'close'):
                         self.opener.close()

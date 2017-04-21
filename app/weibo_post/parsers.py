@@ -31,20 +31,18 @@ from cola.core.parsers import Parser
 from cola.core.utils import urldecode, beautiful_soup
 from cola.core.errors import DependencyNotInstalledError, FetchBannedError
 from cola.core.logs import get_logger
-from cola.core.opener import MechanizeOpener,SpynnerOpener
+from cola.core.opener import MechanizeOpener
 
 from login import WeiboLoginFailure
 from bundle import WeiboUserBundle
-from storage import DoesNotExist, Q, WeiboUser, Friend,\
+from storage import DoesNotExist, Q, WeiboUser,\
                     MicroBlog, Geo, UserInfo, WorkInfo, EduInfo,\
                     Comment, Forward, Like
 
 from conf import fetch_forward, fetch_comment, fetch_like,fetch_userprofile,effective_start_date
 
-from utils import get_ip_proxy,parse_datetime,to_unicode
-from conf import user_config,user_agent,starts
-from tools import QT4_Py_Cookie
-
+from utils import get_ip_proxy,to_unicode
+from conf import user_config,starts
 
 try:
     from dateutil.parser import parse
@@ -266,22 +264,30 @@ class UserHomePageParser(WeiboParser):
             return
         url = url or self.url
         html = ''
+        opener = None
         try:
-            opener = SpynnerOpener(timeout=40)
+            if hasattr(self.opener,'nabr'):
+                opener = self.opener.nabr
+            else:
+                opener = MechanizeOpener(user_agent=user_config.conf.opener.user_agent)
+                p_ = get_ip_proxy()
+                self.logger.info(p_)
+                opener.add_proxy(p_,'http')
+                self.opener.nabr = opener
+
             #opener.br.debug_level =1
-            opener.br.load_jquery(False)
             #t = QT4_Py_Cookie()
             #t.toQtCookieJar(self.opener.cj,opener.br.cookiejar)
-            p_ = get_ip_proxy()
-            self.logger.info(p_)
-            opener.br.set_proxy(p_) 
+            
             # wait_for_text = "$CONFIG['page_id']=",
-            opener.spynner_open(url,tries=1,headers=[('User-Agent',user_config.conf.opener.user_agent)])
-            self.logger.info(opener.br.url)
-            html = to_unicode(opener.br.contents)
-        finally:
-            if opener:
-                opener.br.close()
+            br=opener.open(url,timeout=20)
+            html = to_unicode(br.read())
+        except Exception, ex:
+            self.logger.error(ex)
+            raise ex
+        #finally:
+        #    if opener:
+        #        opener.br.close()
         if not html:
             return
 
@@ -291,18 +297,25 @@ class UserHomePageParser(WeiboParser):
             weibo_user.info = UserInfo()
 
         # find page_id
-        pid_ = re.findall("CONFIG\['page_id'\]='(.*)';",html)[0]
-        if not pid_:
-            raise FetchBannedError('fetch banned by weibo server')
+        try:
+            pid_ = re.findall("CONFIG\['page_id'\]='(.*)';",html)[0]
+        except:
+            if opener:
+                opener.br.close()
+            if hasattr(self.opener,'spynnerbr'):
+                del self.opener.spynnerbr
+            print(html)
+
+            raise Exception("get banned on user page")
 
         domain_ = re.findall("CONFIG\['domain'\]='(.*)';",html)[0]
-        pinfo = soup.find('div',attrs={'class','PCD_person_info'})
+        div_pi = soup.find('div',attrs={'class','PCD_person_info'})
         # verfiy cop
-        bs_verify = pinfo.find('a',attrs={'class':'icon_verify_co_v'})
+        bs_verify = div_pi.find('a',attrs={'class':'icon_verify_co_v'})
         weibo_user.info.is_person = False if bs_verify else True
         
         # vip person
-        bs_vip = pinfo.find('a',attrs={'class':'icon_verify_v'})
+        bs_vip = div_pi.find('a',attrs={'class':'icon_verify_v'})
         weibo_user.info.vip = True if bs_vip else False
         weibo_user.info.verified = True if bs_verify or bs_vip else False
         # nickname
@@ -317,16 +330,16 @@ class UserHomePageParser(WeiboParser):
         weibo_user.info.n_follows = int(tds[0].find('strong').text)
         weibo_user.info.n_fans = int(tds[1].find('strong').text)
         weibo_user.info.n_msgs = int(tds[2].find('strong').text)
-        div_pi = soup.find('div',attrs={'class':'PCD_person_info'})
+        
         weibo_user.info.level = int(div_pi.find('a',attrs={'class':'W_icon_level'}).text.split('.')[1])
-        # location
-        em_place = div_pi.find('em',attrs={'class':'ficon_cd_place'})
-        if em_place:
-            weibo_user.info.location = em_place.parent.find('span')[1].text.strip()
+        
         weibo_user.save()
 
         # counter add one for the processed user home list url
         self.counter.inc('processed_weibo_user_home_page', 1)
+
+        if fetch_userprofile and weibo_user.info.is_person and not weibo_user.info.location:
+            yield 'http://weibo.com/p/%s/info' %  pid_
 
 class ForwardCommentLikeParser(WeiboParser):
     strptime_lock = Lock()
@@ -541,7 +554,7 @@ class UserInfoParser(WeiboParser):
                     weibo_user.info.avatar = header_soup.find('p', attrs='photo_wrap')\
                                                 .find('img')['src']
                     bs_verified = header_soup.find('a',attrs={"suda-data":"key=pc_apply_entry&value=feed_icon"})
-                    weibo_user.info.verified = True if bs_verify else False
+                    weibo_user.info.verified = True if bs_verified else False
                     bs_vip = header_soup.find('a',attrs={"suda-uatrack":"key=home_vip&value=home_feed_vip"})
                     weibo_user.info.vip = True if bs_vip else False
                     weibo_user.info.pf_intro = header_soup.find('div', attrs={'class': 'pf_intro'}).text

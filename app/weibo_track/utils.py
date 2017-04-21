@@ -22,6 +22,8 @@ Created on 2013-7-6
 import requests
 import json
 import random
+import chardet
+from httplib import HTTPException
 
 ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
@@ -163,12 +165,29 @@ def get_ip_proxy():
     global lshttp_
     if not lshttp_:
         myipproxy_url = "http://ipmomentum.online/api/proxy/fast"
-        rsp = requests.get(myipproxy_url,auth=('eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MX0._6jmLfy5i96Ux_fLqIXwTHySY8rdSjvHGJw5VedbZ1I','unset'))
-        proxys = json.loads(rsp.text)
-        lshttp_ =  [p_ for p_ in proxys if p_['type']!='https']
+        try:
+            rsp = requests.get(myipproxy_url,auth=('eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MX0._6jmLfy5i96Ux_fLqIXwTHySY8rdSjvHGJw5VedbZ1I','unset'))
+            proxys = json.loads(rsp.text)
+            lshttp_ =  [p_ for p_ in proxys if p_['type']!='https']
+        except HTTPException, ex:
+            return
     
     p_=random.choice(lshttp_)
     return p_['addr']
+
+def to_unicode(s):
+    if type(s) is unicode:
+        return s
+    elif type(s) is str:
+        d = chardet.detect(s)
+        (cs, conf) = (d['encoding'], d['confidence'])
+        if conf > 0.80:
+            try:
+                return s.decode( cs, errors = 'replace' )
+            except Exception as ex:
+                pass 
+    # force and return only ascii subset
+    return unicode(''.join( [ i if ord(i) < 128 else ' ' for i in s ]))
     
 if __name__ == "__main__":
     #import doctest
