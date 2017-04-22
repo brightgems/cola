@@ -5,14 +5,16 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{e0b97371-5135-4046-a636-012ea0e6f15a}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>setup.py</StartupFile>
+    <StartupFile>app\weibo_account\__init__.py</StartupFile>
     <SearchPath />
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <InterpreterId>{9b7f6c34-57eb-4cc1-a2a7-51577d652091}</InterpreterId>
-    <InterpreterVersion>2.7</InterpreterVersion>
+    <InterpreterId>
+    </InterpreterId>
+    <InterpreterVersion>
+    </InterpreterVersion>
     <IsWindowsApplication>False</IsWindowsApplication>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
@@ -25,12 +27,12 @@
     <Content Include="app\exchange_rate\README.rst" />
     <Content Include="app\impmaker\requirements.txt" />
     <Content Include="app\impmaker\impmaker.yaml" />
+    <Content Include="app\weibo_account\README.rst" />
+    <Content Include="app\weibo_account\requirements.txt" />
+    <Content Include="app\weibo_account\weibo.yaml" />
     <Content Include="app\weibo_post\README.rst" />
     <Content Include="app\weibo_post\requirements.txt" />
     <Content Include="app\weibo_post\weibo.yaml" />
-    <Content Include="app\weibo_track\README.rst" />
-    <Content Include="app\weibo_track\requirements.txt" />
-    <Content Include="app\weibo_track\weibo.yaml" />
     <Content Include="app\wiki\requirements.txt" />
     <Content Include="app\wiki\wiki.yaml" />
     <Content Include="cola\conf\main.yaml" />
@@ -43,6 +45,14 @@
     </Compile>
     <Compile Include="app\impmaker\utils.py" />
     <Compile Include="app\impmaker\__init__.py" />
+    <Compile Include="app\weibo_account\bundle.py" />
+    <Compile Include="app\weibo_account\conf.py" />
+    <Compile Include="app\weibo_account\login.py" />
+    <Compile Include="app\weibo_account\parsers.py" />
+    <Compile Include="app\weibo_account\storage.py" />
+    <Compile Include="app\weibo_account\tools.py" />
+    <Compile Include="app\weibo_account\utils.py" />
+    <Compile Include="app\weibo_account\__init__.py" />
     <Compile Include="app\weibo_post\bundle.py" />
     <Compile Include="app\weibo_post\conf.py" />
     <Compile Include="app\weibo_post\login.py" />
@@ -51,14 +61,6 @@
     <Compile Include="app\weibo_post\tools.py" />
     <Compile Include="app\weibo_post\utils.py" />
     <Compile Include="app\weibo_post\__init__.py" />
-    <Compile Include="app\weibo_track\bundle.py" />
-    <Compile Include="app\weibo_track\conf.py" />
-    <Compile Include="app\weibo_track\login.py" />
-    <Compile Include="app\weibo_track\parsers.py" />
-    <Compile Include="app\weibo_track\storage.py" />
-    <Compile Include="app\weibo_track\tools.py" />
-    <Compile Include="app\weibo_track\utils.py" />
-    <Compile Include="app\weibo_track\__init__.py" />
     <Compile Include="app\wiki\__init__.py" />
     <Compile Include="app\__init__.py" />
     <Compile Include="cola\cluster\master.py" />
@@ -109,6 +111,11 @@
     <Compile Include="cola\job\task.py" />
     <Compile Include="cola\job\__init__.py" />
     <Compile Include="cola\settings.py" />
+    <Compile Include="cola\utilities\util_config.py" />
+    <Compile Include="cola\utilities\util_fetch.py" />
+    <Compile Include="cola\utilities\util_parse.py" />
+    <Compile Include="cola\utilities\yundama.py" />
+    <Compile Include="cola\utilities\__init__.py" />
     <Compile Include="cola\__init__.py" />
     <Compile Include="lab\generic\__init__.py" />
     <Compile Include="lab\weibosearch\bundle.py" />
@@ -136,6 +143,9 @@
     <Compile Include="tests\test_rpc.py" />
     <Compile Include="tests\test_settings.py" />
     <Compile Include="tests\test_urlpatterns.py" />
+    <Compile Include="tests\test_utilities.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="tests\test_zip.py" />
     <Compile Include="tests\__init__.py" />
   </ItemGroup>
@@ -143,7 +153,7 @@
     <Folder Include="app" />
     <Folder Include="app\exchange_rate\" />
     <Folder Include="app\impmaker\" />
-    <Folder Include="app\weibo_track\" />
+    <Folder Include="app\weibo_account\" />
     <Folder Include="app\weibo_post\" />
     <Folder Include="app\wiki" />
     <Folder Include="cola" />
@@ -156,14 +166,12 @@
     <Folder Include="cola\core\mq" />
     <Folder Include="cola\functions" />
     <Folder Include="cola\job" />
+    <Folder Include="cola\utilities\" />
     <Folder Include="lab\" />
     <Folder Include="lab\generic" />
     <Folder Include="lab\weibosearch" />
     <Folder Include="tests" />
     <Folder Include="tests\app" />
-  </ItemGroup>
-  <ItemGroup>
-    <InterpreterReference Include="{9b7f6c34-57eb-4cc1-a2a7-51577d652091}\2.7" />
   </ItemGroup>
   <Import Project="$(PtvsTargetsFile)" Condition="Exists($(PtvsTargetsFile))" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" Condition="!Exists($(PtvsTargetsFile))" />

@@ -22,7 +22,7 @@ Created on 2013-6-7
 
 import os
 import sys
-#sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from cola.core.urls import Url, UrlPatterns
 from cola.job import JobDescription
@@ -50,7 +50,7 @@ url_patterns = UrlPatterns(
         Url(r'http://weibo.com/aj/.+/big.*', 'forward_comment_like', ForwardCommentLikeParser ,priority=1),)
 
 def get_job_desc():
-    return JobDescription('sina weibo blog spider', url_patterns, MechanizeOpener, user_config, 
+    return JobDescription('weibo account spider', url_patterns, MechanizeOpener, user_config, 
                           starts,unit_cls=WeiboUserBundle, login_hook=login_hook)
     
 if __name__ == "__main__":

@@ -23,7 +23,7 @@ Created on 2013-6-9
 import os
 
 from cola.core.config import Config
-from utils import get_ip_proxy
+from cola.utilities.util_fetch import get_ip_proxy
 
 base = os.path.dirname(os.path.abspath(__file__))
 user_conf = os.path.join(base, 'test.yaml')

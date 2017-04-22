@@ -29,10 +29,10 @@ job:
     host: localhost
     port: 27017
   login:
+    - username: z567893951220@sina.com
+      password: zCx93950825*
     - username: brightgems@live.cn
       password: 1234qwerasdf
-    - username: z567893951220@sina.com
-      password: zCx93950825*      
     - username: hebinn2004@sina.com
       password: navice_190124   
     - username: kojak@sina.com

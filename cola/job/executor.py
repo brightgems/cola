@@ -347,11 +347,7 @@ class UrlExecutor(Executor):
         if not ignore:
             self._error()
             raise UnitRetryFailed
-        else:
-            # dec budget if auto budget enabled
-            if self.settings.job.size == 'auto':
-                self.budget_client.dec_budgets(1)
-            return
+
 
     def _clear_error(self, url):
         if hasattr(url, 'error_times'):

@@ -169,12 +169,15 @@ class MechanizeOpener(Opener):
             del self.content
 
     def close(self):
+        """
+            clear browse history, avoid memory issue
+        """
         self._clear_content()
         resp = self.browser.response()
         if resp is not None:
             resp.close()
         self.browser.clear_history()
-    
+
 class SpynnerOpener(Opener):
     def __init__(self, user_agent=None, timeout=30, **kwargs):
         try:
