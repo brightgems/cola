@@ -46,8 +46,9 @@ def login_hook(opener, **kw):
 url_patterns = UrlPatterns(
         Url('http://weibo.com/\d+\?.*', 'user_home', UserHomePageParser, priority=0),
         Url('http://weibo.com/aj/mblog/mbloglist.*', 'micro_blog', MicroBlogParser, priority=1),
-        Url(r'http://weibo.com/p/\d+/info', 'user_info', UserInfoParser,priority=1),
-        Url(r'http://weibo.com/aj/.+/big.*', 'forward_comment_like', ForwardCommentLikeParser ,priority=1),)
+        Url(r'http://weibo.com/aj/.+/big.*', 'forward_comment_like', ForwardCommentLikeParser ,priority=1),
+        Url(r'http://weibo.com/\d+/info.*', 'user_info', UserInfoParser,priority=1),
+)
 
 def get_job_desc():
     return JobDescription('weibo account spider', url_patterns, MechanizeOpener, user_config, 

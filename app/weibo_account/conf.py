@@ -30,8 +30,18 @@ user_conf = os.path.join(base, 'test.yaml')
 if not os.path.exists(user_conf):
     user_conf = os.path.join(base, 'weibo.yaml')
 user_config = Config(user_conf)
-proxys = get_ip_proxy()
-user_config.opener.proxys = proxys
+# set proxys
+i = 0
+user_config.job.proxys = []
+user_config.job.banned_handlers = [{'action': 'relogin'}]
+
+while i < 50:
+    p_ = get_ip_proxy()
+    if not p_:
+        break
+    user_config.job.banned_handlers.insert(1,{'action': 'proxy','addr':p_})    
+    #user_config.job.proxys.append({'addr':p_,'type':'http'})
+    i += 1
 
 user_agent = user_config.conf.opener.user_agent
 
@@ -61,9 +71,9 @@ from datetime import datetime
 effectivedatedelta = None
 if hasattr(user_config.job,"effectivedaterange") and str.isdigit(user_config.job.effectivedaterange[:-1]):
     if user_config.job.effectivedaterange.lower().endswith("m"):
-        effectivedatedelta= timedelta(days= 30* int(user_config.job.effectivedaterange[:-1]))
+        effectivedatedelta = timedelta(days= 30 * int(user_config.job.effectivedaterange[:-1]))
     elif user_config.job.effectivedaterange.lower().endswith("d"):
-        effectivedatedelta= timedelta(days= int(user_config.job.effectivedaterange[:-1]))
+        effectivedatedelta = timedelta(days= int(user_config.job.effectivedaterange[:-1]))
 if not effectivedatedelta:
     effectivedatedelta = timedelta(days=90)
 

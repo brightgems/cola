@@ -558,7 +558,7 @@ class UserInfoParser(WeiboParser):
                     bs_vip = header_soup.find('a',attrs={"suda-uatrack":"key=home_vip&value=home_feed_vip"})
                     weibo_user.info.vip = True if bs_vip else False
                     weibo_user.info.pf_intro = header_soup.find('div', attrs={'class': 'pf_intro'}).text
-                elif domid == 'CD_person_detail':
+                elif domid == 'PCD_person_detail':
                     header_soup = beautiful_soup(data['html'])
                     weibo_user.info.level_score = int(header_soup.find('p',attrs={'class':'level_info'}).find_all('span',attrs={'class':'S_txt1'})[1].text.strip())
                                                        

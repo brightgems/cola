@@ -8,20 +8,20 @@ job:
     max: -1  # to the cluster, -1 means no restrictions, if greater than 0, means webpages opened per minute
     single: -1 # max restrictions to a single instance
     adaptive: no
-  instances: 4
+  instances: 1
   priorities: 3 # priorities queue count in mq
   copies: 1 # redundant size of objects in mq
   inc: no
-  shuffle: no # only work in bundle mode, means the urls in a bundle will shuffle before fetching
+  shuffle: yes # only work in bundle mode, means the urls in a bundle will shuffle before fetching
   error:
     network:
-      retries: 0 # 0 means no retry, -1 means keeping on trying
-      span: 20 # seconds span to retry
+      retries: 2 # 0 means no retry, -1 means keeping on trying
+      span: 5 # seconds span to retry
       ignore: no # only work under bundle mode, if True will ignore this url and move to the next after several tries, or move to the next bundle
     server: # like 404 or 500 error returned by server
-      retries: 5
-      span: 10
-      ignore: no
+      retries: 0
+      span: 2
+      ignore: yes
   components:
     deduper:
       cls: cola.core.dedup.FileBloomFilterDeduper
@@ -44,14 +44,11 @@ job:
     - username: passwordrecovery@sina.cn
       password: wdks.wang        
   starts:
-    - uid: 1666454854 # 梅赛德斯—奔驰
-    - uid: 1667486960 # 奔驰smart 
-    - uid: 1892475055 # 香奈儿CHANEL 
-    - uid: 3949575070 # 美团外卖  
+    - uid: 1649173367
   fetch:
     forward: yes
     comment: yes
     like: no
     userprofile: yes
   clear: yes
-  effectivedaterange: 1M
+  effectivedaterange: 3d

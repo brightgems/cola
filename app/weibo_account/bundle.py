@@ -44,10 +44,12 @@ class WeiboUserBundle(Bundle):
     def urls(self):
         start = int(time.time() * (10 ** 6))
         urls_ = [
-            # user home page
+            ## user home page
             'http://weibo.com/%s?is_all=1&_k=%s' % (self.uid, start),
+
             # blog batch
             'http://weibo.com/aj/mblog/mbloglist?uid=%s&_k=%s' % (self.uid, start),
+            
         ]
-
+        
         return urls_

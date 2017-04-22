@@ -31,20 +31,19 @@ from cola.core.parsers import Parser
 from cola.core.utils import urldecode, beautiful_soup
 from cola.core.errors import DependencyNotInstalledError, FetchBannedError
 from cola.core.logs import get_logger
-from cola.core.opener import MechanizeOpener,SpynnerOpener
 
 from login import WeiboLoginFailure
 from bundle import WeiboUserBundle
-from storage import DoesNotExist, Q, WeiboUser, Friend,\
+from storage import DoesNotExist, Q, WeiboUser,\
                     MicroBlog, Geo, UserInfo, WorkInfo, EduInfo,\
                     Comment, Forward, Like
 
 from conf import fetch_forward, fetch_comment, fetch_like,fetch_userprofile,effective_start_date
 
-from cola.utilities.util_parse import parse_datetime,to_unicode
+from cola.utilities.util_parse import to_unicode
 from cola.utilities.util_fetch import get_ip_proxy
-from conf import user_config,user_agent,starts
-from tools import QT4_Py_Cookie
+from conf import user_config,starts
+from urllib2 import URLError
 
 
 try:
@@ -99,9 +98,11 @@ class MicroBlogParser(WeiboParser):
         
         url = url or self.url
         params = urldecode(url)
-        br = self.opener.browse_open(url)
-#         self.logger.debug('load %s finish' % url)
-        
+        try:        
+            br = self.opener.browse_open(url)
+        except URLError:
+            raise FetchBannedError()
+
         if not self.check(url, br):
             return
             
@@ -262,31 +263,57 @@ class MicroBlogParser(WeiboParser):
 
 
 class UserHomePageParser(WeiboParser):
+    def extract_user_info(self,soup,weibo_user):
+        div_pi = soup.find('div',attrs={'class','PCD_person_info'})
+        # verfiy cop
+        bs_verify = div_pi.find('a',attrs={'class':'icon_verify_co_v'})
+        weibo_user.info.is_person = False if bs_verify else True
+        
+        # vip person
+        bs_vip = div_pi.find('a',attrs={'class':'icon_verify_v'})
+        weibo_user.info.vip = True if bs_vip else False
+        weibo_user.info.verified = True if bs_verify or bs_vip else False
+        weibo_user.info.level = int(div_pi.find('a',attrs={'class':'W_icon_level'}).text.split('.')[1])
+
+    def extract_user_counter(self,soup,weibo_user):       
+        # msg counter
+        tds = soup.find('table', attrs={'class': 'tb_counter'}).find_all('td')
+
+        if tds:
+            weibo_user.info.n_follows = int(tds[0].find('strong').text)
+            weibo_user.info.n_fans = int(tds[1].find('strong').text)
+            weibo_user.info.n_msgs = int(tds[2].find('strong').text)
+
+
     def parse(self, url=None):
         if self.bundle.exists is False:
             return
         url = url or self.url
         html = ''
         opener = None
+        
         try:
-            if hasattr(self.opener,'nalbr'):
-                opener = self.opener.nalbr # no account login browser
-            else:
-                opener = SpynnerOpener(timeout=30,user_agent=user_config.conf.opener.user_agent)
+            #if hasattr(self.opener,'nalbr'):
+            #    opener = self.opener.nalbr # no account login browser
+            #else:
+            #    opener = MechanizeOpener(timeout=10,user_agent=user_config.conf.opener.user_agent)
                 
-                p_ = get_ip_proxy()
-                self.logger.info(p_)
-                opener.add_proxy(p_,'http')
-                self.opener.nalbr = opener
-            html = to_unicode(opener.open(url,headers=[('User-Agent',user_config.conf.opener.user_agent)]))
+            #    p_ = get_ip_proxy()
+            #    self.logger.info(p_)
+            #    opener.add_proxy(p_,'http')
+            #    self.opener.nalbr = opener
+            opener = self.opener
+            opener.addheaders=[('User-Agent',user_config.conf.opener.user_agent)]
+            html = to_unicode(opener.open(url,timeout=10))
+            
+            opener.browser.clear_history() # resolve memory issue
         except Exception, ex:
+            
             if opener:
-                opener.br.close()
+                opener.browser.close()
             if hasattr(self.opener,'nalbr'):
                 del self.opener.nalbr
-
-            self.logger.error(ex)
-            raise ex
+            raise Exception("get banned on user page")
         
 
         if not html:
@@ -302,38 +329,36 @@ class UserHomePageParser(WeiboParser):
             pid_ = re.findall("CONFIG\['page_id'\]='(.*)';",html)[0]
         except:
             if opener:
-                opener.br.close()
+                opener.browser.close()
             if hasattr(self.opener,'nalbr'):
                 del self.opener.nalbr
-            self.logger.error(html)
 
-            raise Exception("get banned on user page")
+            raise FetchBannedError("get banned on user page")
 
         domain_ = re.findall("CONFIG\['domain'\]='(.*)';",html)[0]
-        div_pi = soup.find('div',attrs={'class','PCD_person_info'})
-        # verfiy cop
-        bs_verify = div_pi.find('a',attrs={'class':'icon_verify_co_v'})
-        weibo_user.info.is_person = False if bs_verify else True
-        
-        # vip person
-        bs_vip = div_pi.find('a',attrs={'class':'icon_verify_v'})
-        weibo_user.info.vip = True if bs_vip else False
-        weibo_user.info.verified = True if bs_verify or bs_vip else False
-        # nickname
-        nickname_ = soup.find('div',attrs={'class','pf_username'}).text
+
+        for script in soup.find_all('script'):
+            text = script.text
+            if text.startswith('FM.view'):
+                text = text.strip().replace(';', '').replace('FM.view(', '')[:-1]
+                data = json.loads(text)
+                domid = data['domid']
+                if domid.startswith("Pl_Core_UserInfo"):
+                    header_soup = beautiful_soup(data['html'])
+                    self.extract_user_info(header_soup,weibo_user)
+                elif domid.startswith("Pl_Official_Header"):  
+                    header_soup = beautiful_soup(data['html'])
+                    # nickname
+                    nickname_ = header_soup.find('div',attrs={'class','pf_username'}).text
+                elif domid.startswith("Pl_Core_T8CustomTriColumn"):  
+                    header_soup = beautiful_soup(data['html'])
+                    self.extract_user_counter(header_soup,weibo_user)
+
         self.bundle.pid = pid_
         self.bundle.domain = domain_
         weibo_user.pid = pid_
         weibo_user.info.domain = domain_
         weibo_user.info.nickname = nickname_.strip()
-        # msg counter
-        tds = soup.find('table', attrs={'class': 'tb_counter'}).find_all('td')
-        weibo_user.info.n_follows = int(tds[0].find('strong').text)
-        weibo_user.info.n_fans = int(tds[1].find('strong').text)
-        weibo_user.info.n_msgs = int(tds[2].find('strong').text)
-        
-        weibo_user.info.level = int(div_pi.find('a',attrs={'class':'W_icon_level'}).text.split('.')[1])
-        
         weibo_user.save()
 
         # counter add one for the processed user home list url
@@ -559,9 +584,10 @@ class UserInfoParser(WeiboParser):
                     bs_vip = header_soup.find('a',attrs={"suda-uatrack":"key=home_vip&value=home_feed_vip"})
                     weibo_user.info.vip = True if bs_vip else False
                     weibo_user.info.pf_intro = header_soup.find('div', attrs={'class': 'pf_intro'}).text
-                elif domid == 'CD_person_detail':
+                elif domid.startswith('Pl_Official_RightGrowNew'):
                     header_soup = beautiful_soup(data['html'])
                     weibo_user.info.level_score = int(header_soup.find('p',attrs={'class':'level_info'}).find_all('span',attrs={'class':'S_txt1'})[1].text.strip())
+                    weibo_user.info.level = int(header_soup.find('p',attrs={'class':'level'}).find_all('span',attrs={'class':'S_txt1'})[0].text.strip().split('.')[1])
                                                        
             elif 'STK' in text:
                 text = text.replace('STK && STK.pageletM && STK.pageletM.view(', '')[:-1]
@@ -582,8 +608,7 @@ class UserInfoParser(WeiboParser):
         profile_map = {
             u'昵称': {'field': 'nickname'},
             u'所在地': {'field': 'location'},
-            u'性别': {'field': 'sex', 
-                    'func': lambda s: 'M' if s == u'男' else 'F'},
+            u'性别': {'field': 'sex'},
             u'生日': {'field': 'birth'},
             u'博客': {'field': 'blog'},
             u'个性域名': {'field': 'site'},
