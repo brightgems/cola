@@ -31,7 +31,6 @@ from cola.core.parsers import Parser
 from cola.core.utils import urldecode, beautiful_soup
 from cola.core.errors import DependencyNotInstalledError, FetchBannedError
 from cola.core.logs import get_logger
-from cola.core.opener import MechanizeOpener
 
 from login import WeiboLoginFailure
 from bundle import WeiboUserBundle
@@ -41,8 +40,12 @@ from storage import DoesNotExist, Q, WeiboUser,\
 
 from conf import fetch_forward, fetch_comment, fetch_like,fetch_userprofile,effective_start_date
 
-from utils import get_ip_proxy,to_unicode
+from cola.utilities.util_parse import to_unicode
+from cola.utilities.util_fetch import get_ip_proxy
 from conf import user_config,starts
+from urllib2 import URLError
+from six.moves import urllib_parse
+from utils import url_to_mid
 
 try:
     from dateutil.parser import parse
@@ -55,14 +58,12 @@ TIMEOUT = 30.0
 class WeiboParser(Parser):
     def __init__(self, opener=None, url=None, bundle=None, **kwargs):
         super(WeiboParser, self).__init__(opener=opener, url=url, **kwargs)
-        self.bundle = bundle
-        self.uid = bundle.label
         self.opener.set_default_timeout(TIMEOUT)
         #print(user_agent)
         
         if not hasattr(self, 'logger') or self.logger is None:
             self.logger = get_logger(name='weibo_parser')
-    
+        self.uid = None
     
     def _check_url(self, dest_url, src_url):
         return dest_url.split('?')[0] == src_url.split('?')[0]
@@ -73,273 +74,133 @@ class WeiboParser(Parser):
             if dest_url.startswith('http://weibo.com/login.php'):
                 raise WeiboLoginFailure('Weibo not login or login expired')
             if dest_url.startswith('http://weibo.com/sorry?usernotexists'):
-                self.bundle.exists = False
                 return False
         return True
-    
-    def get_weibo_user(self):
-        if self.bundle.weibo_user is not None:
-            return self.bundle.weibo_user
+
+    def get_weibo_user(self,uid):
         
         try:
-            self.bundle.weibo_user = getattr(WeiboUser, 'objects').get(uid=self.uid)
+            weibo_user = getattr(WeiboUser, 'objects').get(uid=uid)
         except DoesNotExist:
-            self.bundle.weibo_user = WeiboUser(uid=self.uid)
-            self.bundle.weibo_user.save()
-        return self.bundle.weibo_user
-
+            weibo_user = WeiboUser(uid=uid)
+            weibo_user.save()
+        return weibo_user
 
 class MicroBlogParser(WeiboParser):
+    def get_mid(self,url):
+        q = urllib_parse.urlparse(url)
+        return str(url_to_mid(q.path.split('/')[-1]))
+
+    def save_blog_detail(self,div,mid):
+        try:
+            mblog = getattr(MicroBlog, 'objects').get(Q(mid=mid) & Q(uid=self.uid))
+        except DoesNotExist:
+            mblog = MicroBlog(mid=mid, uid=self.uid)
+        content_div = div.find('div', attrs={
+            'class': 'WB_text', 
+            'node-type': 'feed_list_content'
+        })
+        blog_create_date = parse(div.find('a',attrs={'node-type':'feed_list_item_date'})['title'])
+
+        for img in content_div.find_all("img", attrs={'type': 'face'}):
+            img.replace_with(img['title'])
+        mblog.content = content_div.text
+        is_forward = div.get('isforward')
+        if is_forward:
+            # write origional user, msg
+            mblog.omid = div['omid']
+            tbinfos = div['tbinfo'].split('&')
+            mblog.ouid = tbinfos[0].split('=')[1]
+            name_a = div.find('a', attrs={
+                'class': 'WB_name', 
+                'node-type': 'feed_list_originNick' 
+            })
+            text_a = div.find('div', attrs={
+                'class': 'WB_text',
+                'node-type': 'feed_list_reason'
+            })
+            if name_a is not None and text_a is not None:
+                mblog.forward = '%s: %s' % (name_a.text,
+                    text_a.text)
+        mblog.created = blog_create_date
+        mblog.last_update = datetime.now()
+
+        func_div = div.find_all('div', attrs={'node-type':'feed_list_options'})[-1]
+        action_type_re = lambda t: re.compile("^(feed_list|fl)_%s$" % t)
+            
+        likes = func_div.find('a', attrs={'action-type': action_type_re("like")}).find_all('em')[1].text
+        likes = likes.strip('(').strip(')').replace(',','')
+        likes = int(likes) if likes and unicode.isdigit(likes) else 0
+        mblog.n_likes = likes
+        forwards = func_div.find('a', attrs={'action-type': action_type_re("forward")}).find_all('em')[1].text
+        forwards = forwards.strip('(').strip(')').replace(',','')
+        mblog.n_forwards = int(forwards) if forwards and unicode.isdigit(forwards) else 0
+        comments = func_div.find('a', attrs={'action-type': action_type_re('comment')}).find_all('em')[1].text
+        comments = comments.strip('(').strip(')').replace(',','')
+        mblog.n_comments = int(comments) if comments and unicode.isdigit(comments) else 0
+                
+        # fetch geo info
+        map_info = div.find("div", attrs={'class': 'map_data'})
+        if map_info is not None:
+            geo = Geo()
+            geo.location = map_info.text.split('-')[0].strip()
+            geo_info = urldecode("?" + map_info.find('a')['action-data'])['geo']
+            geo.longtitude, geo.latitude = tuple([float(itm) for itm in geo_info.split(',', 1)])
+            mblog.geo = geo
+        # has_video
+        div_video = div.find('div',attrs={'node-type':'fl_h5_video_disp'}) or div.find('span',attrs={'class':'icon_playvideo'})
+        mblog.has_video =True if div_video else False
+        mblog.save()
+        return mblog
+
     def parse(self, url=None):
-        if self.bundle.exists is False:
-            return
         
         url = url or self.url
         params = urldecode(url)
-        br = self.opener.browse_open(url)
-#         self.logger.debug('load %s finish' % url)
-        
+        try:        
+            br = self.opener.browse_open(url)
+        except URLError:
+            raise FetchBannedError()
+
         if not self.check(url, br):
             return
-            
-        weibo_user = self.get_weibo_user()        
-
-        params['_t'] = 0
-        params['__rnd'] = str(int(time.time() * 1000))
-        page = int(params.get('page', 1))
-        pre_page = int(params.get('pre_page', 0))
-        count = 15
-        if 'pagebar' not in params:
-            params['pagebar'] = '0'
-            pre_page += 1
-        elif params['pagebar'] == '0':
-            params['pagebar'] = '1'
-        elif params['pagebar'] == '1':
-            del params['pagebar']
-            pre_page = page
-            page += 1
-            count = 50
-        params['count'] = count
-        params['page'] = page
-        params['pre_page'] = pre_page
-
+        html = to_unicode(br.response().read())
         try:
-            data = json.loads(br.response().read())['data']
-        except (ValueError, KeyError):
-            raise FetchBannedError('fetch banned by weibo server')
-        soup = beautiful_soup(data)
-        finished = False
-        
-        divs = soup.find_all('div', attrs={'class': 'WB_feed_type'},  mid=True)
-        max_id = None
-        for div in divs:
-            mid = div['mid']
-            if len(mid) == 0:
-                continue
-            max_id = mid
-            blog_create_date = parse(div.select('a.S_link2.WB_time')[0]['title'])
-            # skip all following blogs if create date less than effective start
-            # date
-            if (blog_create_date - effective_start_date).days < 0:
-                self.logger.info("%s: blog has sync up after %s" % (self.uid,effective_start_date.strftime("%Y%m%d")))
-                finished = True
-                break
+            self.uid = re.findall("CONFIG\['oid'\]='(.*)';",html)[0]
+        except:
+            raise FetchBannedError("get banned on blog page")
 
-            if 'end_id' not in params:
-                params['end_id'] = mid
-            # skip
-            if weibo_user.newest_mids and not mid in weibo_user.newest_mids:
-                self.logger.info("%s: reach earliest blog %s" % (self.uid,mid))
-                finished = True
-                break
-            if len(self.bundle.newest_mids) < 3:
-                self.bundle.newest_mids.append(mid)
-            
-            try:
-                mblog = getattr(MicroBlog, 'objects').get(Q(mid=mid) & Q(uid=self.uid))
-            except DoesNotExist:
-                mblog = MicroBlog(mid=mid, uid=self.uid)
-            content_div = div.find('div', attrs={
-                'class': 'WB_text', 
-                'node-type': 'feed_list_content'
-            })
-            for img in content_div.find_all("img", attrs={'type': 'face'}):
-                img.replace_with(img['title'])
-            mblog.content = content_div.text
-            is_forward = div.get('isforward')
-            if is_forward:
-                # write origional user, msg
-                mblog.omid = div['omid']
-                tbinfos = div['tbinfo'].split('&')
-                mblog.ouid = tbinfos[0].split('=')[1]
-                name_a = div.find('a', attrs={
-                    'class': 'WB_name', 
-                    'node-type': 'feed_list_originNick' 
-                })
-                text_a = div.find('div', attrs={
-                    'class': 'WB_text',
-                    'node-type': 'feed_list_reason'
-                })
-                if name_a is not None and text_a is not None:
-                    mblog.forward = '%s: %s' % (name_a.text,
-                        text_a.text)
-            mblog.created = blog_create_date
-            mblog.last_update = datetime.now()
-
-            func_div = div.find_all('div', 'WB_func')[-1]
-            action_type_re = lambda t: re.compile("^(feed_list|fl)_%s$" % t)
-            
-            likes = func_div.find('a', attrs={'action-type': action_type_re("like")}).text
-            likes = likes.strip('(').strip(')')
-            likes = 0 if len(likes) == 0 else int(likes)
-            mblog.n_likes = likes
-            forwards = func_div.find('a', attrs={'action-type': action_type_re("forward")}).text
-            if '(' not in forwards:
-                mblog.n_forwards = 0
-            else:
-                mblog.n_forwards = int(forwards.strip().split('(', 1)[1].strip(')'))
-            comments = func_div.find('a', attrs={'action-type': action_type_re('comment')}).text
-            if '(' not in comments:
-                mblog.n_comments = 0
-            else:
-                mblog.n_comments = int(comments.strip().split('(', 1)[1].strip(')'))
-                
-            # fetch geo info
-            map_info = div.find("div", attrs={'class': 'map_data'})
-            if map_info is not None:
-                geo = Geo()
-                geo.location = map_info.text.split('-')[0].strip()
-                geo_info = urldecode("?" + map_info.find('a')['action-data'])['geo']
-                geo.longtitude, geo.latitude = tuple([float(itm) for itm in geo_info.split(',', 1)])
-                mblog.geo = geo
-            # has_video
-            mblog.has_video = div.find('div',attrs={'node-type':'fl_h5_video_disp'}) or div.find('span',attrs={'class':'icon_playvideo'})
-            mblog.save()
-            self.counter.inc('processed_weibo_posts', 1)
-
-            # fetch forwards and comments
-            if self.uid in starts:
-                query = {'id': mid, '_t': 0, '__rnd': int(time.time() * 1000)}
-                query_str = urllib.urlencode(query)
-                if fetch_forward and mblog.n_forwards > 0:
-                    forward_url = 'http://weibo.com/aj/mblog/info/big?%s' % query_str
-                    yield forward_url
-                if fetch_comment and mblog.n_comments > 0:
-                    comment_url = 'http://weibo.com/aj/comment/big?%s' % query_str
-                    yield comment_url
-                if fetch_like and mblog.n_likes > 0:
-                    query = {'mid': mid, '_t': 0, '__rnd': int(time.time() * 1000)}
-                    query_str = urllib.urlencode(query)
-                    like_url = 'http://weibo.com/aj/like/big?%s' % query_str
-                    yield like_url
-
-            yield '%s?%s' % (url.split('?')[0], urllib.urlencode(params))
-
-
-        if params.has_key('pagebar'):
-            params['max_id'] = max_id
-        elif params.has_key('max_id'):
-            del params['max_id']
-#         self.logger.debug('parse %s finish' % url)
-
-        # counter add one for the processed weibo list url
-        self.counter.inc('processed_weibo_list_page', 1)
-
-        # if not has next page
-        if len(divs) == 0 or finished:
-            weibo_user = self.get_weibo_user()
-            for mid in self.bundle.newest_mids:
-                if mid not in weibo_user.newest_mids:
-                    weibo_user.newest_mids.append(mid)
-            while len(weibo_user.newest_mids) > 3:
-                weibo_user.newest_mids.pop()
-            weibo_user.last_update = self.bundle.last_update
-            weibo_user.save()
-            return
-
-
-class UserHomePageParser(WeiboParser):
-    def parse(self, url=None):
-        if self.bundle.exists is False:
-            return
-        url = url or self.url
-        html = ''
-        opener = None
-        try:
-            if hasattr(self.opener,'nabr'):
-                opener = self.opener.nabr
-            else:
-                opener = MechanizeOpener(user_agent=user_config.conf.opener.user_agent)
-                p_ = get_ip_proxy()
-                self.logger.info(p_)
-                opener.add_proxy(p_,'http')
-                self.opener.nabr = opener
-
-            #opener.br.debug_level =1
-            #t = QT4_Py_Cookie()
-            #t.toQtCookieJar(self.opener.cj,opener.br.cookiejar)
-            
-            # wait_for_text = "$CONFIG['page_id']=",
-            br=opener.open(url,timeout=20)
-            html = to_unicode(br.read())
-        except Exception, ex:
-            self.logger.error(ex)
-            raise ex
-        #finally:
-        #    if opener:
-        #        opener.br.close()
-        if not html:
-            return
 
         soup = beautiful_soup(html)
-        weibo_user = self.get_weibo_user()
-        if weibo_user.info is None:
-            weibo_user.info = UserInfo()
+        finished = False
+        mid = self.get_mid(url)
+        for script in soup.find_all('script'):
+            text = script.text
+            if text.startswith('FM.view'):
+                text = text.strip().replace(';', '').replace('FM.view(', '')[:-1]
+                data = json.loads(text)
+                domid = data['domid']
+                if domid.startswith("Pl_Official_WeiboDetail"):
+                    header_soup = beautiful_soup(data['html'])
+                    mblog = self.save_blog_detail(header_soup,mid)
+                    self.counter.inc('processed_weibo_posts', 1)
 
-        # find page_id
-        try:
-            pid_ = re.findall("CONFIG\['page_id'\]='(.*)';",html)[0]
-        except:
-            if opener:
-                opener.br.close()
-            if hasattr(self.opener,'spynnerbr'):
-                del self.opener.spynnerbr
-            print(html)
+        # fetch forwards and comments
+        if fetch_comment or fetch_forward or fetch_like:
+            query = {'id': mid, '_t': 0, '__rnd': int(time.time() * 1000)}
+            query_str = urllib.urlencode(query)
+            if fetch_forward and mblog.n_forwards > 0:
+                forward_url = 'http://weibo.com/aj/mblog/info/big?%s' % query_str
+                yield unicode(forward_url)
+            if fetch_comment and mblog.n_comments > 0:
+                comment_url = 'http://weibo.com/aj/comment/big?%s' % query_str
+                yield unicode(comment_url)
+            if fetch_like and mblog.n_likes > 0:
+                query = {'mid': mid, '_t': 0, '__rnd': int(time.time() * 1000)}
+                query_str = urllib.urlencode(query)
+                like_url = 'http://weibo.com/aj/like/big?%s' % query_str
+                yield unicode(like_url)
 
-            raise Exception("get banned on user page")
-
-        domain_ = re.findall("CONFIG\['domain'\]='(.*)';",html)[0]
-        div_pi = soup.find('div',attrs={'class','PCD_person_info'})
-        # verfiy cop
-        bs_verify = div_pi.find('a',attrs={'class':'icon_verify_co_v'})
-        weibo_user.info.is_person = False if bs_verify else True
-        
-        # vip person
-        bs_vip = div_pi.find('a',attrs={'class':'icon_verify_v'})
-        weibo_user.info.vip = True if bs_vip else False
-        weibo_user.info.verified = True if bs_verify or bs_vip else False
-        # nickname
-        nickname_ = soup.find('div',attrs={'class','pf_username'}).text
-        self.bundle.pid = pid_
-        self.bundle.domain = domain_
-        weibo_user.pid = pid_
-        weibo_user.info.domain = domain_
-        weibo_user.info.nickname = nickname_.strip()
-        # msg counter
-        tds = soup.find('table', attrs={'class': 'tb_counter'}).find_all('td')
-        weibo_user.info.n_follows = int(tds[0].find('strong').text)
-        weibo_user.info.n_fans = int(tds[1].find('strong').text)
-        weibo_user.info.n_msgs = int(tds[2].find('strong').text)
-        
-        weibo_user.info.level = int(div_pi.find('a',attrs={'class':'W_icon_level'}).text.split('.')[1])
-        
-        weibo_user.save()
-
-        # counter add one for the processed user home list url
-        self.counter.inc('processed_weibo_user_home_page', 1)
-
-        if fetch_userprofile and weibo_user.info.is_person and not weibo_user.info.location:
-            yield 'http://weibo.com/p/%s/info' %  pid_
 
 class ForwardCommentLikeParser(WeiboParser):
     strptime_lock = Lock()
@@ -373,8 +234,6 @@ class ForwardCommentLikeParser(WeiboParser):
         return dt
     
     def parse(self, url=None):
-        if self.bundle.exists is False:
-            return
         
         url = url or self.url
         br = self.opener.browse_open(url)
@@ -398,13 +257,11 @@ class ForwardCommentLikeParser(WeiboParser):
         decodes = urldecode(url)
         mid = decodes.get('id', decodes.get('mid'))
         
-        mblog = self.bundle.current_mblog
-        if mblog is None or mblog.mid != mid:
-            try:
-                mblog = getattr(MicroBlog, 'objects').get(Q(mid=mid) & Q(uid=self.uid))
-            except DoesNotExist:
-                mblog = MicroBlog(mid=mid, uid=self.uid)
-                mblog.save()
+
+        try:
+            mblog = getattr(MicroBlog, 'objects').get(Q(mid=mid))
+        except DoesNotExist:
+            raise Exception("blog not exists")
         
         def set_instance(instance, dl):
             instance.avatar = dl.find('dt').find('img')['src']
@@ -416,6 +273,8 @@ class ForwardCommentLikeParser(WeiboParser):
             instance.content = dl.text.strip()
 
         counter_type = None
+        start = int(time.time() * (10 ** 6))
+
         if url.startswith('http://weibo.com/aj/comment'):
             counter_type = 'comment'
             dls = soup.find_all('dl', mid=True)
@@ -425,7 +284,9 @@ class ForwardCommentLikeParser(WeiboParser):
                 set_instance(comment, dl)
                 
                 mblog.comments.append(comment)
-                yield WeiboUserBundle(str(uid))
+                weibo_user = self.get_weibo_user(uid)
+                if fetch_userprofile and not (weibo_user.info):
+                    yield 'http://weibo.com/%s/info?_rnd=%s' % (uid, start)
         elif url.startswith('http://weibo.com/aj/mblog/info'):
             counter_type = 'forward'
             dls = soup.find_all('dl', mid=True)
@@ -436,7 +297,9 @@ class ForwardCommentLikeParser(WeiboParser):
                 set_instance(forward, dl)
                 
                 mblog.forwards.append(forward)
-                yield WeiboUserBundle(str(uid))
+                weibo_user = self.get_weibo_user(uid)
+                if fetch_userprofile and not (weibo_user.info):
+                    yield 'http://weibo.com/%s/info?_rnd=%s' % (uid, start)
         elif url.startswith('http://weibo.com/aj/like'):
             counter_type = 'like'
             lis = soup.find_all('li', uid=True)
@@ -445,7 +308,9 @@ class ForwardCommentLikeParser(WeiboParser):
                 like.avatar = li.find('img')['src']
                 
                 mblog.likes.append(like)
-                yield WeiboUserBundle(str(uid))
+                weibo_user = self.get_weibo_user(uid)
+                if fetch_userprofile and not (weibo_user.info):
+                    yield 'http://weibo.com/%s/info?_rnd=%s' % (uid, start)
         mblog.save()
 
         # counter add one for the processed forward or comment or like list url
@@ -465,28 +330,25 @@ class ForwardCommentLikeParser(WeiboParser):
     
 class UserInfoParser(WeiboParser):
     def parse(self, url=None):
-        if self.bundle.exists is False:
-            return
         
         url = url or self.url
-        # add proxy
-        p_ = get_ip_proxy()
-        if p_:
-            self.opener.remove_proxy()
-            self.opener.add_proxy(p_)
+        try:
+            br = self.opener.browse_open(url)
+            html = br.response().read()
+        
+            if not self.check(url, br):
+                return
+        
+            self.uid = re.findall("CONFIG\['oid'\]='(.*)';",html)[0]
+        except:
+            raise FetchBannedError("get banned on blog page")
 
-        br = self.opener.browse_open(url)
-#         self.logger.debug('load %s finish' % url)
-        soup = beautiful_soup(br.response().read())
-        
-        if not self.check(url, br):
-            return
-        
-        weibo_user = self.get_weibo_user()
+        weibo_user = self.get_weibo_user(self.uid)
         info = weibo_user.info
         if info is None:
             weibo_user.info = UserInfo()
-            
+
+        soup = beautiful_soup(html)    
         new_style = False
         
         profile_div = None
@@ -532,7 +394,7 @@ class UserInfoParser(WeiboParser):
                             edu_div = inner_div
                         elif block_title == u'标签信息':
                             tags_div = inner_div
-                elif domid == 'Pl_Official_Header__1':
+                elif domid == 'Pl_Official_Header__1' and data.has_key('html'):
                     header_soup = beautiful_soup(data['html'])
                     weibo_user.info.avatar = header_soup.find('div', attrs={'class': 'pf_head_pic'})\
                                                 .find('img')['src']
@@ -541,7 +403,7 @@ class UserInfoParser(WeiboParser):
                                                     .find('strong', attrs={'node-type': 'follow'}).text)
                     weibo_user.info.n_fans = int(header_soup.find('ul', attrs={'class': 'user_atten'})\
                                                  .find('strong', attrs={'node-type': 'fans'}).text)
-                elif domid.startswith('Pl_Core_T8CustomTriColumn__'):
+                elif domid.startswith('Pl_Core_T8CustomTriColumn__') and data.has_key('html'):
                     # new style friends info
                     header_soup = beautiful_soup(data['html'])
                     tds = header_soup.find('table', attrs={'class': 'tb_counter'})\
@@ -558,9 +420,10 @@ class UserInfoParser(WeiboParser):
                     bs_vip = header_soup.find('a',attrs={"suda-uatrack":"key=home_vip&value=home_feed_vip"})
                     weibo_user.info.vip = True if bs_vip else False
                     weibo_user.info.pf_intro = header_soup.find('div', attrs={'class': 'pf_intro'}).text
-                elif domid == 'PCD_person_detail':
+                elif domid.startswith('Pl_Official_RightGrowNew'):
                     header_soup = beautiful_soup(data['html'])
                     weibo_user.info.level_score = int(header_soup.find('p',attrs={'class':'level_info'}).find_all('span',attrs={'class':'S_txt1'})[1].text.strip())
+                    weibo_user.info.level = int(header_soup.find('p',attrs={'class':'level_info'}).find_all('span',attrs={'class':'S_txt1'})[0].text.strip().split('.')[1])
                                                        
             elif 'STK' in text:
                 text = text.replace('STK && STK.pageletM && STK.pageletM.view(', '')[:-1]
@@ -581,8 +444,7 @@ class UserInfoParser(WeiboParser):
         profile_map = {
             u'昵称': {'field': 'nickname'},
             u'所在地': {'field': 'location'},
-            u'性别': {'field': 'sex', 
-                    'func': lambda s: True if s == u'男' else False},
+            u'性别': {'field': 'sex'},
             u'生日': {'field': 'birth'},
             u'博客': {'field': 'blog'},
             u'个性域名': {'field': 'site'},
@@ -728,7 +590,6 @@ class UserInfoParser(WeiboParser):
                     weibo_user.info.tags.append(a.text.strip())
 
         weibo_user.save()
-#         self.logger.debug('parse %s finish' % url)
 
         # counter add one for the profile url
         self.counter.inc('processed_profile_page', 1)

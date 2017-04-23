@@ -44,7 +44,10 @@ job:
     - username: passwordrecovery@sina.cn
       password: wdks.wang        
   starts:
-    - uid: 1649173367
+    - uid: 1667486960 # 奔驰smart 
+    - uid: 1892475055 # 香奈儿CHANEL 
+    - uid: 3949575070 # 美团外卖  
+    - uid: 1666454854 # 梅赛德斯—奔驰
   fetch:
     forward: yes
     comment: yes

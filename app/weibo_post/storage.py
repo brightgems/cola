@@ -100,7 +100,7 @@ class UserInfo(EmbeddedDocument):
     nickname = StringField()
     avatar = URLField()
     location = StringField()
-    sex = BooleanField()
+    sex = StringField()
     birth = StringField()
     blog = URLField()
     site = URLField()

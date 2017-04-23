@@ -23,30 +23,9 @@ import requests
 import json
 import random
 import chardet
-from httplib import HTTPException
+
 
 ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
-def parse_datetime(dt_str):
-    dt = None
-    if u'秒' in dt_str:
-        sec = int(dt_str.split(u'秒', 1)[0].strip())
-        dt = datetime.now() - timedelta(seconds=sec)
-    elif u'分钟' in dt_str:
-        sec = int(dt_str.split(u'分钟', 1)[0].strip()) * 60
-        dt = datetime.now() - timedelta(seconds=sec)
-    elif u'今天' in dt_str:
-        dt_str = dt_str.replace(u'今天', datetime.now().strftime('%Y-%m-%d'))
-        dt = self._strptime(dt_str, '%Y-%m-%d %H:%M')
-    elif u'月' in dt_str and u'日' in dt_str:
-        this_year = datetime.now().year
-        date_str = '%s %s' % (this_year, dt_str)
-        if isinstance(date_str, unicode):
-            date_str = date_str.encode('utf-8')
-        dt = self._strptime(date_str, u'%Y %m月%d日 %H:%M')
-    else:
-        dt = parse(dt_str)
-    return dt
 
 def base62_encode(num, alphabet=ALPHABET):
     """Encode a number in Base X
@@ -156,39 +135,6 @@ def get_avatar_size_url(img_url, size=50):
     return '/'.join(splits)
 
 
-lshttp_ = None
-def get_ip_proxy():
-    '''
-    >>> get_ip_proxy()
-    
-    '''
-    global lshttp_
-    if not lshttp_:
-        myipproxy_url = "http://ipmomentum.online/api/proxy/fast"
-        try:
-            rsp = requests.get(myipproxy_url,auth=('eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MX0._6jmLfy5i96Ux_fLqIXwTHySY8rdSjvHGJw5VedbZ1I','unset'))
-            proxys = json.loads(rsp.text)
-            lshttp_ =  [p_ for p_ in proxys if p_['type']!='https']
-        except HTTPException, ex:
-            return
-    
-    p_=random.choice(lshttp_)
-    return p_['addr']
-
-def to_unicode(s):
-    if type(s) is unicode:
-        return s
-    elif type(s) is str:
-        d = chardet.detect(s)
-        (cs, conf) = (d['encoding'], d['confidence'])
-        if conf > 0.80:
-            try:
-                return s.decode( cs, errors = 'replace' )
-            except Exception as ex:
-                pass 
-    # force and return only ascii subset
-    return unicode(''.join( [ i if ord(i) < 128 else ' ' for i in s ]))
-    
 if __name__ == "__main__":
     #import doctest
     #doctest.testmod()

@@ -53,7 +53,6 @@
     <Compile Include="app\weibo_account\tools.py" />
     <Compile Include="app\weibo_account\utils.py" />
     <Compile Include="app\weibo_account\__init__.py" />
-    <Compile Include="app\weibo_post\bundle.py" />
     <Compile Include="app\weibo_post\conf.py" />
     <Compile Include="app\weibo_post\login.py" />
     <Compile Include="app\weibo_post\parsers.py" />

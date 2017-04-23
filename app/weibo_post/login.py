@@ -25,9 +25,12 @@ import base64
 import binascii
 import re
 import json
+import random
+# app modules
 from cola.core.logs import get_logger
 from cola.core.errors import DependencyNotInstalledError,\
                              LoginFailure
+from cola.utilities.yundama import YunDaMa
 
 try:
     import rsa
@@ -42,6 +45,10 @@ class WeiboLogin(object):
         self.logger = get_logger("weibo.login")
         self.username = username
         self.passwd = passwd
+        self.weibo_url = 'http://weibo.com/'
+        self.prelogin_url = 'https://login.sina.com.cn/sso/prelogin.php'
+        self.login_url = 'http://login.sina.com.cn/sso/login.php?client=ssologin.js(v1.4.18)'
+        self.captcha_url ='http://login.sina.com.cn/cgi/pin.php'
         
     def get_user(self, username):
         username = urllib.quote(username)
@@ -53,9 +60,34 @@ class WeiboLogin(object):
         passwd = rsa.encrypt(message, key)
         return binascii.b2a_hex(passwd)
     
+    def getPin(self,pcid):
+        '''
+        验证码
+        '''
+        para = {
+            'p': pcid,
+            'r': random.randint(10000,100000),
+            's': 0
+        }
+
+        import urllib
+        url = '%s?%s' % (self.captcha_url, urllib.urlencode(para))
+
+        pic = self.opener.open(url)
+        file('pin.png','wb').write(pic)
+        return pic
+
+    def get_verify_cd(self,pic):
+        ydm = YunDaMa("brtgpy", "8ik,*IK<")
+        cid_t, code_t = ydm.get_captcha("captcha.jpeg", pic)
+        print(cid_t, code_t)
+        if cid_t and (not code_t):
+            return ydm.result(cid_t)
+        return code_t
+
     def prelogin(self):
         username = self.get_user(self.username)
-        prelogin_url = 'http://login.sina.com.cn/sso/prelogin.php?entry=sso&callback=sinaSSOController.preloginCallBack&su=%s&rsakt=mod&client=ssologin.js(v1.4.18)' % username
+        prelogin_url = 'http://login.sina.com.cn/sso/prelogin.php?entry=sso&callback=sinaSSOController.preloginCallBack&su=%s&rsakt=mod&checkpin=1&client=ssologin.js(v1.4.18)' % username
         data = self.opener.open(prelogin_url)
         regex = re.compile('\((.*)\)')
         try:
@@ -63,7 +95,9 @@ class WeiboLogin(object):
             data = json.loads(json_data)
             
             return str(data['servertime']), data['nonce'], \
-                data['pubkey'], data['rsakv']
+                data['pubkey'], data['rsakv'],data.get('showpin', 0),data.get('pcid', '')
+
+            
         except:
             raise WeiboLoginFailure
         
@@ -71,7 +105,7 @@ class WeiboLogin(object):
         login_url = 'http://login.sina.com.cn/sso/login.php?client=ssologin.js(v1.4.18)'
         
         try:
-            servertime, nonce, pubkey, rsakv = self.prelogin()
+            servertime, nonce, pubkey, rsakv,showpin,pcid = self.prelogin()
             postdata = {
                 'entry': 'weibo',
                 'gateway': '1',
@@ -93,6 +127,18 @@ class WeiboLogin(object):
                 'cdult':3,
                 'returntype': 'TEXT'
             }
+
+            if showpin == 1:
+                pic = self.getPin(pcid)
+                vcode = self.get_verify_cd(pic)
+                if vcode:
+                    postdata['door'] = vcode
+                    postdata['cdult'] = 2
+                    postdata['pcid'] = pcid
+                    postdata['prelt'] = 2041
+                else:
+                    self.logger.warn("failed yudama")
+            
             postdata = urllib.urlencode(postdata)
             text = self.opener.open(login_url, postdata)
 

@@ -28,9 +28,9 @@ from cola.core.urls import Url, UrlPatterns
 from cola.job import JobDescription
 
 from login import WeiboLogin as AccountLogin
-from parsers import MicroBlogParser, ForwardCommentLikeParser,UserInfoParser,UserHomePageParser
+from parsers import MicroBlogParser, ForwardCommentLikeParser,UserInfoParser
 from conf import starts, user_config, instances
-from bundle import WeiboUserBundle
+#from bundle import WeiboUserBundle
 from cola.core.opener import MechanizeOpener
 import random
 
@@ -44,14 +44,14 @@ def login_hook(opener, **kw):
     return ret
 
 url_patterns = UrlPatterns(
-        Url('http://weibo.com/\d+\?.*', 'user_home', UserHomePageParser, priority=0),
-        Url('http://weibo.com/aj/mblog/mbloglist.*', 'micro_blog', MicroBlogParser, priority=1),
-        Url(r'http://weibo.com/p/\d+/info', 'user_info', UserInfoParser,priority=1),
-        Url(r'http://weibo.com/aj/.+/big.*', 'forward_comment_like', ForwardCommentLikeParser ,priority=1),)
+        Url('http://weibo.com/\w+/\w+\?.*type\=.*', 'micro_blog', MicroBlogParser, priority=0),
+        Url(r'http://weibo.com/aj/.+/big.*', 'forward_comment_like', ForwardCommentLikeParser ,priority=1),
+        Url(r'http://weibo.com/\d+/info.*', 'user_info', UserInfoParser,priority=1),
+)
 
 def get_job_desc():
-    return JobDescription('sina weibo blog spider', url_patterns, MechanizeOpener, user_config, 
-                          starts,unit_cls=WeiboUserBundle, login_hook=login_hook)
+    return JobDescription('weibo account spider', url_patterns, MechanizeOpener, user_config, 
+                          starts, login_hook=login_hook)
     
 if __name__ == "__main__":
     from cola.context import Context

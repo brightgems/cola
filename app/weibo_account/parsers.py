@@ -217,7 +217,8 @@ class MicroBlogParser(WeiboParser):
                 geo.longtitude, geo.latitude = tuple([float(itm) for itm in geo_info.split(',', 1)])
                 mblog.geo = geo
             # has_video
-            mblog.has_video = div.find('div',attrs={'node-type':'fl_h5_video_disp'}) or div.find('span',attrs={'class':'icon_playvideo'})
+            div_video = div.find('div',attrs={'node-type':'fl_h5_video_disp'}) or div.find('span',attrs={'class':'icon_playvideo'})
+            mblog.has_video =True if div_video else False
             mblog.save()
             self.counter.inc('processed_weibo_posts', 1)
 
@@ -311,8 +312,6 @@ class UserHomePageParser(WeiboParser):
             
             if opener:
                 opener.browser.close()
-            if hasattr(self.opener,'nalbr'):
-                del self.opener.nalbr
             raise Exception("get banned on user page")
         
 
@@ -495,11 +494,6 @@ class UserInfoParser(WeiboParser):
             return
         
         url = url or self.url
-        # add proxy
-        p_ = get_ip_proxy()
-        if p_:
-            self.opener.remove_proxy()
-            self.opener.add_proxy(p_)
 
         br = self.opener.browse_open(url)
 #         self.logger.debug('load %s finish' % url)
