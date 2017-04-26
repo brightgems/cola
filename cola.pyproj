@@ -33,6 +33,7 @@
     <Content Include="app\weibo_post\README.rst" />
     <Content Include="app\weibo_post\requirements.txt" />
     <Content Include="app\weibo_post\weibo.yaml" />
+    <Content Include="app\weibo_search\weibosearch.yaml" />
     <Content Include="app\wiki\requirements.txt" />
     <Content Include="app\wiki\wiki.yaml" />
     <Content Include="cola\conf\main.yaml" />
@@ -53,6 +54,13 @@
     <Compile Include="app\weibo_account\tools.py" />
     <Compile Include="app\weibo_account\utils.py" />
     <Compile Include="app\weibo_account\__init__.py" />
+    <Compile Include="app\weibo_search\bundle.py" />
+    <Compile Include="app\weibo_search\conf.py" />
+    <Compile Include="app\weibo_search\login.py" />
+    <Compile Include="app\weibo_search\parsers.py" />
+    <Compile Include="app\weibo_search\starts.py" />
+    <Compile Include="app\weibo_search\storage.py" />
+    <Compile Include="app\weibo_search\__init__.py" />
     <Compile Include="app\weibo_post\conf.py" />
     <Compile Include="app\weibo_post\login.py" />
     <Compile Include="app\weibo_post\parsers.py" />
@@ -152,6 +160,7 @@
     <Folder Include="app" />
     <Folder Include="app\exchange_rate\" />
     <Folder Include="app\impmaker\" />
+    <Folder Include="app\weibo_search\" />
     <Folder Include="app\weibo_account\" />
     <Folder Include="app\weibo_post\" />
     <Folder Include="app\wiki" />

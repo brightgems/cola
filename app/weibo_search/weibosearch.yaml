@@ -1,0 +1,54 @@
+﻿opener:
+  user_agent: Baiduspider+(+http://www.baidu.com/search/spider.htm)
+job:
+  db: sina
+  mode: url # also can be `bundle`
+  size: auto   # the destination (including bundle or url) size
+  speed: 
+    max: -1  # to the cluster, -1 means no restrictions, if greater than 0, means webpages opened per minute
+    single: -1 # max restrictions to a single instance
+    adaptive: no
+  instances: 4
+  priorities: 3 # priorities queue count in mq
+  copies: 1 # redundant size of objects in mq
+  inc: no
+  shuffle: no # only work in bundle mode, means the urls in a bundle will shuffle before fetching
+  error:
+    network:
+      retries: 0 # 0 means no retry, -1 means keeping on trying
+      span: 20 # seconds span to retry
+      ignore: no # only work under bundle mode, if True will ignore this url and move to the next after several tries, or move to the next bundle
+    server: # like 404 or 500 error returned by server
+      retries: 5
+      span: 10
+      ignore: no
+  components:
+    deduper:
+      cls: cola.core.dedup.FileBloomFilterDeduper
+  mongo:
+    host: localhost
+    port: 27017
+  login:
+    - username: brightgems@live.cn
+      password: 1234qwerasdf
+    - username: z567893951220@sina.com
+      password: zCx93950825*      
+    - username: hebinn2004@sina.com
+      password: navice_190124   
+    - username: kojak@sina.com
+      password: qwe123      
+    - username: huanhai24@sina.com
+      password: h312813255     
+    - username: qqmus@sina.com
+      password: laoMu2192219      
+    - username: passwordrecovery@sina.cn
+      password: wdks.wang        
+  starts:
+    - keyword: 外科风云
+  fetch:
+    forward: yes
+    comment: yes
+    like: no
+    userprofile: yes
+  clear: yes
+  effectivedaterange: 1M
