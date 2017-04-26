@@ -50,7 +50,7 @@ url_patterns = UrlPatterns(
 )
 
 def get_job_desc():
-    return JobDescription('weibo account spider', url_patterns, MechanizeOpener, user_config, 
+    return JobDescription('weibo post spider', url_patterns, MechanizeOpener, user_config, 
                           starts, login_hook=login_hook)
     
 if __name__ == "__main__":

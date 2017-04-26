@@ -33,7 +33,6 @@ from cola.core.errors import DependencyNotInstalledError, FetchBannedError
 from cola.core.logs import get_logger
 
 from login import WeiboLoginFailure
-from bundle import WeiboUserBundle
 from storage import DoesNotExist, Q, WeiboUser,\
                     MicroBlog, Geo, UserInfo, WorkInfo, EduInfo,\
                     Comment, Forward, Like
