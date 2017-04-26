@@ -156,10 +156,7 @@ class MicroBlogParser(WeiboParser):
         
         url = url or self.url
         params = urldecode(url)
-        try:        
-            br = self.opener.browse_open(url)
-        except URLError:
-            raise FetchBannedError()
+        br = self.opener.browse_open(url)
 
         if not self.check(url, br):
             return
@@ -173,6 +170,7 @@ class MicroBlogParser(WeiboParser):
         soup = beautiful_soup(html)
         finished = False
         mid = self.get_mid(url)
+        mblog = None
         for script in soup.find_all('script'):
             text = script.text
             if text.startswith('FM.view'):
@@ -185,7 +183,7 @@ class MicroBlogParser(WeiboParser):
                     self.counter.inc('processed_weibo_posts', 1)
 
         # fetch forwards and comments
-        if fetch_comment or fetch_forward or fetch_like:
+        if mblog and (fetch_comment or fetch_forward or fetch_like):
             query = {'id': mid, '_t': 0, '__rnd': int(time.time() * 1000)}
             query_str = urllib.urlencode(query)
             if fetch_forward and mblog.n_forwards > 0:

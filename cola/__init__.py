@@ -15,7 +15,7 @@ limitations under the License.
 '''
 
 
-version_tuple = (0, 1, 2)
+version_tuple = (0, 1, 3)
 
 def get_version_string():
     if isinstance(version_tuple[-1], basestring):
@@ -24,5 +24,5 @@ def get_version_string():
 
 VERSION = get_version_string()
 __version__ = VERSION
-__copyright__ = "Copyright (c) 2013 Qin Xuye"
+__copyright__ = "Copyright (c) 2017 Qin Xuye"
 __license__ = "Apache 2.0"

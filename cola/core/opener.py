@@ -211,7 +211,7 @@ class SpynnerOpener(Opener):
         if method == 'POST':
             operation = QNetworkAccessManager.PostOperation
         self.br.load(url, wait_callback=wait_callback, tries=tries, 
-                     operation=operation, body=data, headers=headers,load_timeout= self._default_timout)
+                     operation=operation, body=data, headers=headers, load_timeout= self._default_timout)
         
         return self.br
         
