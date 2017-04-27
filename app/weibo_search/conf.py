@@ -45,7 +45,7 @@ while i < 50:
 
 user_agent = user_config.conf.opener.user_agent
 
-starts = [unicode(start.keyword) for start in user_config.job.starts]
+starts = [u'http://s.weibo.com/weibo/%s' % start.keyword for start in user_config.job.starts]
 
 mongo_host = user_config.job.mongo.host
 mongo_port = user_config.job.mongo.port

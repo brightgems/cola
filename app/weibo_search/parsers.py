@@ -34,10 +34,11 @@ except ImportError:
     raise DependencyNotInstalledError('python-dateutil')
 
 from cola.core.parsers import Parser
-from cola.core.errors import DependencyNotInstalledError
+from cola.core.errors import DependencyNotInstalledError, FetchBannedError
 from cola.core.utils import urldecode, beautiful_soup
 from cola.utilities.util_parse import to_unicode
 from cola.utilities.util_fetch import get_ip_proxy
+from cola.core.unit import Url
 
 from conf import user_config,starts
 from bundle import WeiboSearchBundle
@@ -46,7 +47,7 @@ from storage import DoesNotExist, Q, WeiboUser,\
                     Comment, Forward, Like
 
 class WeiboParser(Parser):
-    def __init__(self, opener = None, url = None, bundle = None, **kwargs):
+    def __init__(self, opener=None, url=None, bundle=None, **kwargs):
         super(WeiboParser, self).__init__(opener=opener, url=url, **kwargs)
         
         if not hasattr(self, 'logger') or self.logger is None:
@@ -74,10 +75,8 @@ class WeiboParser(Parser):
         return weibo_user
 
 class WeiboSearchParser(WeiboParser):
-    def __init__(self, opener = None, url = None, bundle = None, **kwargs):
+    def __init__(self, opener=None, url=None, bundle=None, **kwargs):
         super(WeiboSearchParser, self).__init__(opener=opener, url=url, **kwargs)
-        self.bundle = bundle
-        self.keyword = bundle.label
         
     def get_microblog(self, mid, keyword):
         try:
@@ -118,16 +117,19 @@ class WeiboSearchParser(WeiboParser):
         func_div = div.find_all('div', attrs={'class':'feed_action'})[-1]
         action_type_re = lambda t: re.compile("^(feed_list|fl)_%s$" % t)
             
-        likes = func_div.find('a', attrs={'action-type': action_type_re("like")}).find('em').text
-        likes = likes.strip('(').strip(')').replace(',','')
-        likes = int(likes) if likes and unicode.isdigit(likes) else 0
-        mblog.n_likes = likes
-        forwards = func_div.find('a', attrs={'action-type': action_type_re("forward")}).find('em').text
-        forwards = forwards.strip('(').strip(')').replace(',','')
-        mblog.n_forwards = int(forwards) if forwards and unicode.isdigit(forwards) else 0
-        comments = func_div.find('a', attrs={'action-type': action_type_re('comment')}).find('em').text
-        comments = comments.strip('(').strip(')').replace(',','')
-        mblog.n_comments = int(comments) if comments and unicode.isdigit(comments) else 0
+        likes = func_div.find('a', attrs={'action-type': action_type_re("like")}).find('em')
+        if likes:
+            likes = likes.text.strip('(').strip(')').replace(',','')
+            likes = int(likes) if likes and unicode.isdigit(likes) else 0
+            mblog.n_likes = likes
+        forwards = func_div.find('a', attrs={'action-type': action_type_re("forward")}).find('em')
+        if forwards:
+            forwards = forwards.text.strip('(').strip(')').replace(',','')
+            mblog.n_forwards = int(forwards) if forwards and unicode.isdigit(forwards) else 0
+        comments = func_div.find('a', attrs={'action-type': action_type_re('comment')}).find('em')
+        if comments:
+            comments = comments.text.strip('(').strip(')').replace(',','')
+            mblog.n_comments = int(comments) if comments and unicode.isdigit(comments) else 0
         # parse uid
         a = func_div.find('a',attrs={'action-type':'feed_list_forward'})['action-data']
         u = urllib_parse.unquote(a[a.find('url='):])
@@ -152,13 +154,19 @@ class WeiboSearchParser(WeiboParser):
         mblog.save()
         return (weibo_user,mblog)
         
-    def parse(self, url = None):
+    def parse(self, url=None):
         url = url or self.url
         
         html = to_unicode(self.opener.open(url,timeout=10))
 
-        if not html:
-            return
+        if not 'pl_weibo_direct' in html:
+            raise FetchBannedError()
+        # find page_id
+        try:
+            keyword = re.findall("CONFIG\['s_search'\]\s+=\s+'(.*)'",html)[0]
+        except:
+            raise FetchBannedError("get banned on user page")
+        
 
         soup = beautiful_soup(html)
 
@@ -168,26 +176,28 @@ class WeiboSearchParser(WeiboParser):
                 text = text.strip().replace(';', '').replace('STK && STK.pageletM && STK.pageletM.view(', '')[:-1]
                 data = json.loads(text)
                 pid = data['pid']
-                if pid.startswith("pl_weibo_direct"):
+                if pid == "pl_weibo_direct":
                     #region extract_mblogs
                     header_soup = beautiful_soup(data['html'])
                     finished = False
                     feed_list_items = header_soup.find_all('div', attrs={'action-type': 'feed_list_item'}, mid=True)
                     for dl in feed_list_items:
                         mid = dl['mid']
-                        mblog, finished = self.get_microblog(mid, self.keyword)
+                        self.logger.debug('mid:%s' % mid)
+                        mblog, finished = self.get_microblog(mid, keyword)
                         weibo_user,mblog = self.save_blog_detail(dl,mblog)
 
                         if not weibo_user.info.gender:
                             uid = weibo_user.uid
                             start = int(time.time() * (10 ** 6))
-                            yield 'http://weibo.com/%s/info?_rnd=%s' % (uid, start)
+                            yield 'http://weibo.com/%s?is_all=1&_rnd=%s' % (uid, start)
 
-                        if finished:
-                            self.logger.info('reach post processed last time, quit task!')
-                            break
+                        #if finished:
+                        #    self.logger.info('reach post processed last time,
+                        #    quit task!')
+                        #    break
                     #endregion
-                    pages = header_soup.find('div', attrs={'class': 'search_page'})
+                    pages = header_soup.find('div', attrs={'class': 'W_pages'})
                     if pages is None or len(list(pages.find_all('a'))) == 0:
                         finished = True
                     else:
@@ -196,17 +206,12 @@ class WeiboSearchParser(WeiboParser):
                             next_href = next_page['href']
                             if not next_href.startswith('http://'):
                                 next_href = urlparse.urljoin('http://s.weibo.com', next_href)
-                                url, query = tuple(next_href.split('&', 1))
-                                base, key = tuple(url.rsplit('/', 1))
-                                key = urllib.unquote(key)
-                                url = '/'.join((base, key))
-                                next_href = '&'.join((url, query))
-                            yield [next_href], []
+                            yield next_href
                         else:
                             finished = True
         
                     if finished:
-                        bundle = WeiboSearchBundle(self.keyword, force=True)
+                        bundle = Url(keyword, force=True)
                         # return [], [bundle]
         yield [], []
 
@@ -233,15 +238,13 @@ class UserHomePageParser(WeiboParser):
             weibo_user.info.n_msgs = int(tds[2].find('strong').text)
 
 
-    def parse(self, url = None):
-        if self.bundle.exists is False:
-            return
+    def parse(self, url=None):
         url = url or self.url
         html = ''
-        opener = None
+        opener = self.opener
         
         try:
-            opener = self.opener
+            
             opener.addheaders = [('User-Agent',user_config.conf.opener.user_agent)]
             html = to_unicode(opener.open(url,timeout=10))
             
@@ -252,12 +255,13 @@ class UserHomePageParser(WeiboParser):
                 opener.browser.close()
             raise Exception("get banned on user page")
         
-
-        if not html:
-            return
+        try:
+            uid = re.findall("CONFIG\['oid'\]='(.*)';",html)[0]
+        except:
+            raise FetchBannedError("get banned on blog page")
 
         soup = beautiful_soup(html)
-        weibo_user = self.get_weibo_user()
+        weibo_user = self.get_weibo_user(uid)
         if weibo_user.info is None:
             weibo_user.info = UserInfo()
 
@@ -265,11 +269,6 @@ class UserHomePageParser(WeiboParser):
         try:
             pid_ = re.findall("CONFIG\['page_id'\]='(.*)';",html)[0]
         except:
-            if opener:
-                opener.browser.close()
-            if hasattr(self.opener,'nalbr'):
-                del self.opener.nalbr
-
             raise FetchBannedError("get banned on user page")
 
         domain_ = re.findall("CONFIG\['domain'\]='(.*)';",html)[0]
@@ -287,12 +286,10 @@ class UserHomePageParser(WeiboParser):
                     header_soup = beautiful_soup(data['html'])
                     # nickname
                     nickname_ = header_soup.find('div',attrs={'class','pf_username'}).text
-                elif domid.startswith("Pl_Core_T8CustomTriColumn"):  
+                elif domid.startswith("Pl_Core_T8CustomTriColumn") and data.has_key('html'):  
                     header_soup = beautiful_soup(data['html'])
                     self.extract_user_counter(header_soup,weibo_user)
 
-        self.bundle.pid = pid_
-        self.bundle.domain = domain_
         weibo_user.pid = pid_
         weibo_user.info.domain = domain_
         weibo_user.info.nickname = nickname_.strip()
@@ -300,6 +297,3 @@ class UserHomePageParser(WeiboParser):
 
         # counter add one for the processed user home list url
         self.counter.inc('processed_weibo_user_home_page', 1)
-        time.sleep(1)
-        if fetch_userprofile and weibo_user.info.is_person and not weibo_user.info.location:
-            yield 'http://weibo.com/p/%s/info' % pid_

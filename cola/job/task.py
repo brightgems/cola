@@ -126,20 +126,22 @@ class Task(object):
             self.starts = self.starts[:size]
         
     def _get_unit(self, priority, runnings):
+        running = None
         if priority == 0 and len(self.starts) > 0:
-            runnings.append(self.starts.pop(0))
+            running = self.starts.pop(0)
         elif len(self.priorities_objs[priority]) > 0:
-            runnings.append(self.priorities_objs[priority].pop(0))
+            running = self.priorities_objs[priority].pop(0)
         else:
             is_inc = priority == self.n_priorities
             if not is_inc:
                 running = self.mq.get(priority=priority)
             else:
                 running = self.mq.get_inc()
-            if running:
-                if isinstance(running, str):
-                    running = self.job_desc.unit_cls(running)
-                runnings.append(running)
+        # convert to object
+        if running:
+            if isinstance(running, basestring):
+                running = self.job_desc.unit_cls(running)
+            runnings.append(running)
                 
     def _has_not_finished(self, priority):
         return len(self.priorities_objs[priority]) > 0

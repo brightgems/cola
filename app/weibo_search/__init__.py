@@ -49,7 +49,7 @@ url_patterns = UrlPatterns(
 
 def get_job_desc():
     return JobDescription('weibo search', url_patterns, MechanizeOpener, user_config, 
-                          starts, unit_cls=WeiboSearchBundle, login_hook=login_hook)
+                          starts, login_hook=login_hook)
     
 if __name__ == "__main__":
     from cola.context import Context
