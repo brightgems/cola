@@ -279,7 +279,7 @@ class UserHomePageParser(WeiboParser):
                 text = text.strip().replace(';', '').replace('FM.view(', '')[:-1]
                 data = json.loads(text)
                 domid = data['domid']
-                if domid.startswith("Pl_Core_UserInfo"):
+                if domid.startswith("Pl_Core_UserInfo") and data.has_key('html'):
                     header_soup = beautiful_soup(data['html'])
                     self.extract_user_info(header_soup,weibo_user)
                 elif domid.startswith("Pl_Official_Header"):  
