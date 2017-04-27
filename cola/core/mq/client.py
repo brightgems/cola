@@ -32,7 +32,7 @@ from cola.core.mq.distributor import Distributor
 
 class MessageQueueClient(object):
     
-    def __init__(self, addrs, app_name=None, copies=1):
+    def __init__(self, addrs, app_name = None, copies = 1):
         self.addrs = addrs
         self.distributors = Distributor(addrs, copies=copies)
         self.prefix = get_rpc_prefix(app_name, 'mq')
@@ -42,13 +42,13 @@ class MessageQueueClient(object):
             self.distributors.distribute(objs)
         
         for addr, objs in addrs_objs.iteritems():
-            client_call(addr, self.prefix+'batch_put', pickle.dumps(objs))
+            client_call(addr, self.prefix + 'batch_put', pickle.dumps(objs))
         for addr, m in addrs_backup_objs.iteritems():
             for b_addr, objs in m.iteritems():
-                client_call(addr, self.prefix+'put_backup', b_addr, 
+                client_call(addr, self.prefix + 'put_backup', b_addr, 
                             pickle.dumps(objs))
         
-    def get(self, size=1, priority=0):
+    def get(self, size = 1, priority = 0):
         size = max(size, 1)
         
         addrs = list(self.addrs)
@@ -60,12 +60,12 @@ class MessageQueueClient(object):
             if left <= 0:
                 break
             
-            objs = pickle.loads(client_call(addr, self.prefix+'get', 
+            objs = pickle.loads(client_call(addr, self.prefix + 'get', 
                                             left, priority))
             if objs is None:
                 continue
             if not isinstance(objs, list):
-                objs = [objs, ]
+                objs = [objs,]
             results.extend(objs)
         
         if size == 1:

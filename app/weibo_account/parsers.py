@@ -602,7 +602,7 @@ class UserInfoParser(WeiboParser):
         profile_map = {
             u'昵称': {'field': 'nickname'},
             u'所在地': {'field': 'location'},
-            u'性别': {'field': 'sex'},
+            u'性别': {'field': 'gender'},
             u'生日': {'field': 'birth'},
             u'博客': {'field': 'blog'},
             u'个性域名': {'field': 'site'},

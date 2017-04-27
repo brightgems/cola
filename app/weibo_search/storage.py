@@ -15,18 +15,22 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-Created on 2013-6-27
+Created on 2013-6-9
 
 @author: Chine
 '''
 
 from cola.core.errors import DependencyNotInstalledError
 
-from conf import mongo_host, mongo_port, db_name
+from conf import mongo_host, mongo_port, db_name, shard_key
 
 try:
-    from mongoengine import connect, Document, Q, DoesNotExist, \
-                            StringField, DateTimeField, IntField
+    from mongoengine import connect, Document, EmbeddedDocument, \
+                            DoesNotExist, Q, \
+                            StringField, DateTimeField, EmailField, \
+                            BooleanField, URLField, IntField, FloatField, \
+                            ListField, EmbeddedDocumentField, \
+                            ValidationError
 except ImportError:
     raise DependencyNotInstalledError('mongoengine')
 
@@ -34,15 +38,106 @@ connect(db_name, host=mongo_host, port=mongo_port)
 
 DoesNotExist = DoesNotExist
 Q = Q
+ValidationError = ValidationError
 
-class MicroBlog(Document):
+class Forward(EmbeddedDocument):
+    mid = StringField(required=True)
+    uid = StringField(required=True)
+    avatar = URLField()
     content = StringField()
-    forward = StringField()
+    created = DateTimeField()
+
+class Comment(EmbeddedDocument):
+    uid = StringField(required=True)
+    avatar = URLField()
+    content = StringField()
     created = DateTimeField()
     
-    likes = IntField()
-    forwards = IntField()
-    comments = IntField()
+class Like(EmbeddedDocument):
+    uid = StringField(required=True)
+    avatar = URLField()
     
+class Geo(EmbeddedDocument):
+    longtitude = FloatField()
+    latitude = FloatField()
+    location = StringField()
+
+class MicroBlog(Document):
     mid = StringField(required=True)
-    keyword = StringField(required=True)
+    uid = StringField()
+    content = StringField()
+    ouid = StringField()
+    omid = StringField()
+    forward = StringField()
+    created = DateTimeField()
+    geo = EmbeddedDocumentField(Geo)
+    n_likes = IntField()
+    likes = ListField(EmbeddedDocumentField(Like))
+    n_forwards = IntField()
+    forwards = ListField(EmbeddedDocumentField(Forward)) 
+    n_comments = IntField()
+    comments = ListField(EmbeddedDocumentField(Comment))
+    has_video = BooleanField()
+    keyword = StringField(required=True) # from keyword
+    last_update = DateTimeField()
+    meta = {
+        'indexes': [{'fields': ['mid', 'uid']}]
+    }
+    
+class EduInfo(EmbeddedDocument):
+    name = StringField()
+    date = StringField()
+    detail = StringField()
+    
+class WorkInfo(EmbeddedDocument):
+    name = StringField()
+    date = StringField()
+    location = StringField()
+    position = StringField()
+    detail = StringField()
+    
+class UserInfo(EmbeddedDocument):
+    nickname = StringField()
+    avatar = URLField()
+    location = StringField()
+    gender = StringField()
+    birth = StringField()
+    blog = URLField()
+    site = URLField()
+    intro = StringField()
+    pf_intro = StringField()
+    verified = BooleanField()
+    vip = BooleanField()
+    level_score = IntField() # 经验值
+    level = IntField() # 等级
+    email = EmailField()
+    qq = StringField()
+    msn = StringField()
+    register_date = DateTimeField()
+    n_follows = IntField()
+    n_fans = IntField()
+    n_msgs = IntField()
+    is_person = BooleanField()
+    
+    edu = ListField(EmbeddedDocumentField(EduInfo))
+    work = ListField(EmbeddedDocumentField(WorkInfo))
+    tags = ListField(StringField())
+    
+class Friend(EmbeddedDocument):
+    uid = StringField()
+    nickname = StringField()
+    gender = BooleanField
+    
+class WeiboUser(Document):
+    uid = StringField(required=True)
+    pid = StringField(required=False)
+    last_update = DateTimeField()
+    newest_mids = ListField(StringField())
+    
+    info = EmbeddedDocumentField(UserInfo)
+    follows = ListField(EmbeddedDocumentField(Friend))
+    fans = ListField(EmbeddedDocumentField(Friend))
+    
+    meta = {
+        'shard_key': shard_key
+    }

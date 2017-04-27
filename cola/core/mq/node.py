@@ -33,6 +33,7 @@ from cola.core.rpc import client_call
 from cola.core.utils import get_rpc_prefix
 from cola.core.mq.store import Store
 from cola.core.mq.distributor import Distributor
+from cola.core.mq.utils import labelize
     
 MQ_STATUS_FILENAME = 'mq.status' # file name of message queue status
 
@@ -240,7 +241,7 @@ class LocalMessageQueueNode(object):
         
     def exist(self, obj):
         if self.deduper:
-            return self.deduper.exist(str(obj))
+            return self.deduper.exist(labelize(obj))
         return False
     
     def shutdown(self):

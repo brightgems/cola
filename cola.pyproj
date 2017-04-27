@@ -11,10 +11,8 @@
     <OutputPath>.</OutputPath>
     <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <InterpreterId>
-    </InterpreterId>
-    <InterpreterVersion>
-    </InterpreterVersion>
+    <InterpreterId>{9b7f6c34-57eb-4cc1-a2a7-51577d652091}</InterpreterId>
+    <InterpreterVersion>2.7</InterpreterVersion>
     <IsWindowsApplication>False</IsWindowsApplication>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
@@ -33,11 +31,11 @@
     <Content Include="app\weibo_post\README.rst" />
     <Content Include="app\weibo_post\requirements.txt" />
     <Content Include="app\weibo_post\weibo.yaml" />
-    <Content Include="app\weibo_search\weibosearch.yaml" />
+    <Content Include="app\weibo_search\keywords.txt" />
+    <Content Include="app\weibo_search\weibo.yaml" />
     <Content Include="app\wiki\requirements.txt" />
     <Content Include="app\wiki\wiki.yaml" />
     <Content Include="cola\conf\main.yaml" />
-    <Content Include="lab\weibosearch\keywords.txt" />
     <Content Include="requirements.txt" />
   </ItemGroup>
   <ItemGroup>
@@ -125,13 +123,6 @@
     <Compile Include="cola\utilities\__init__.py" />
     <Compile Include="cola\__init__.py" />
     <Compile Include="lab\generic\__init__.py" />
-    <Compile Include="lab\weibosearch\bundle.py" />
-    <Compile Include="lab\weibosearch\conf.py" />
-    <Compile Include="lab\weibosearch\login.py" />
-    <Compile Include="lab\weibosearch\parsers.py" />
-    <Compile Include="lab\weibosearch\starts.py" />
-    <Compile Include="lab\weibosearch\storage.py" />
-    <Compile Include="lab\weibosearch\__init__.py" />
     <Compile Include="setup.py" />
     <Compile Include="tests\app\test_weibo.py" />
     <Compile Include="tests\app\test_wiki.py" />
@@ -177,9 +168,11 @@
     <Folder Include="cola\utilities\" />
     <Folder Include="lab\" />
     <Folder Include="lab\generic" />
-    <Folder Include="lab\weibosearch" />
     <Folder Include="tests" />
     <Folder Include="tests\app" />
+  </ItemGroup>
+  <ItemGroup>
+    <InterpreterReference Include="{9b7f6c34-57eb-4cc1-a2a7-51577d652091}\2.7" />
   </ItemGroup>
   <Import Project="$(PtvsTargetsFile)" Condition="Exists($(PtvsTargetsFile))" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" Condition="!Exists($(PtvsTargetsFile))" />

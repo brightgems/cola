@@ -23,15 +23,44 @@ Created on 2013-6-27
 import os
 
 from cola.core.config import Config
+from cola.utilities.util_fetch import get_ip_proxy
 
 base = os.path.dirname(os.path.abspath(__file__))
 user_conf = os.path.join(base, 'test.yaml')
 if not os.path.exists(user_conf):
-    user_conf = os.path.join(base, 'weibosearch.yaml')
+    user_conf = os.path.join(base, 'weibo.yaml')
 user_config = Config(user_conf)
+# set proxys
+i = 0
+user_config.job.proxys = []
+user_config.job.banned_handlers = [{'action': 'relogin'}]
+
+while i < 50:
+    p_ = get_ip_proxy()
+    if not p_:
+        break
+    user_config.job.banned_handlers.insert(1,{'action': 'proxy','addr':p_})    
+    #user_config.job.proxys.append({'addr':p_,'type':'http'})
+    i += 1
+
+user_agent = user_config.conf.opener.user_agent
+
+starts = [unicode(start.keyword) for start in user_config.job.starts]
 
 mongo_host = user_config.job.mongo.host
 mongo_port = user_config.job.mongo.port
 db_name = user_config.job.db
 
+try:
+    shard_key = user_config.job.mongo.shard_key
+    shard_key = tuple([itm['key'] for itm in shard_key])
+except AttributeError:
+    shard_key = tuple()
+
 instances = user_config.job.instances
+
+fetch_forward = user_config.job.fetch.forward
+fetch_comment = user_config.job.fetch.comment
+fetch_like = user_config.job.fetch.like
+fetch_userprofile = user_config.job.fetch.userprofile
+

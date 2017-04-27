@@ -19,20 +19,17 @@ Created on 2013-6-7
 
 @author: Chine
 '''
-
 import os
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from cola.core.urls import Url, UrlPatterns
 from cola.job import JobDescription
+from cola.core.opener import MechanizeOpener
 
 from login import WeiboLogin as AccountLogin
 from parsers import MicroBlogParser, ForwardCommentLikeParser,UserInfoParser
-from conf import starts, user_config, instances
-#from bundle import WeiboUserBundle
-from cola.core.opener import MechanizeOpener
-import random
+from conf import starts, user_config
 
 def login_hook(opener, **kw):
     username = str(kw['username'])

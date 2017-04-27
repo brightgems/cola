@@ -100,7 +100,7 @@ class UserInfo(EmbeddedDocument):
     nickname = StringField()
     avatar = URLField()
     location = StringField()
-    sex = StringField()
+    gender = StringField()
     birth = StringField()
     blog = URLField()
     site = URLField()
@@ -126,7 +126,7 @@ class UserInfo(EmbeddedDocument):
 class Friend(EmbeddedDocument):
     uid = StringField()
     nickname = StringField()
-    sex = BooleanField
+    gender = BooleanField
     
 class WeiboUser(Document):
     uid = StringField(required=True)

@@ -21,17 +21,19 @@ Created on 2013-6-27
 '''
 
 import os
+import sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from cola.core.opener import SpynnerOpener
 from cola.core.urls import Url, UrlPatterns
-from cola.job import Job
+from cola.job import JobDescription
+from cola.core.opener import MechanizeOpener
 
 from login import WeiboLogin
-from parsers import WeiboSearchParser
+from parsers import WeiboSearchParser, UserHomePageParser
 from conf import user_config, instances
 from bundle import WeiboSearchBundle
-
-debug = False
+from conf import starts, user_config, instances
 
 def login_hook(opener, **kw):
     username = kw['username']
@@ -41,12 +43,13 @@ def login_hook(opener, **kw):
     return loginer.login()
 
 url_patterns = UrlPatterns(
-    Url(r'http://s.weibo.com/weibo/.*', 'weibo_search', WeiboSearchParser),
+    Url(u'http://s.weibo.com/weibo/.*', 'weibo_search', WeiboSearchParser, priority=0),
+    Url(u'http://weibo.com/\d+\?.*', 'user_home', UserHomePageParser, priority=0),
 )
 
 def get_job_desc():
     return JobDescription('weibo search', url_patterns, MechanizeOpener, user_config, 
-                          starts, login_hook=login_hook)
+                          starts, unit_cls=WeiboSearchBundle, login_hook=login_hook)
     
 if __name__ == "__main__":
     from cola.context import Context

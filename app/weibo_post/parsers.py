@@ -31,6 +31,8 @@ from cola.core.parsers import Parser
 from cola.core.utils import urldecode, beautiful_soup
 from cola.core.errors import DependencyNotInstalledError, FetchBannedError
 from cola.core.logs import get_logger
+from cola.utilities.util_parse import to_unicode
+from cola.utilities.util_fetch import get_ip_proxy
 
 from login import WeiboLoginFailure
 from storage import DoesNotExist, Q, WeiboUser,\
@@ -38,9 +40,6 @@ from storage import DoesNotExist, Q, WeiboUser,\
                     Comment, Forward, Like
 
 from conf import fetch_forward, fetch_comment, fetch_like,fetch_userprofile,effective_start_date
-
-from cola.utilities.util_parse import to_unicode
-from cola.utilities.util_fetch import get_ip_proxy
 from conf import user_config,starts
 from urllib2 import URLError
 from six.moves import urllib_parse
@@ -441,7 +440,7 @@ class UserInfoParser(WeiboParser):
         profile_map = {
             u'昵称': {'field': 'nickname'},
             u'所在地': {'field': 'location'},
-            u'性别': {'field': 'sex'},
+            u'性别': {'field': 'gender'},
             u'生日': {'field': 'birth'},
             u'博客': {'field': 'blog'},
             u'个性域名': {'field': 'site'},

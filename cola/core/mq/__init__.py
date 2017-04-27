@@ -26,8 +26,9 @@ import threading
 from cola.core.mq.node import MessageQueueNodeProxy
 from cola.core.mq.client import MessageQueueClient
 
-PUT, PUT_INC, GET, GET_INC, EXIST = range(5) # 5 operations now Cola MQ supports
+from cola.core.mq.utils import labelize
 
+PUT, PUT_INC, GET, GET_INC, EXIST = range(5) # 5 operations now Cola MQ supports
 MessageQueueClient = MessageQueueClient
 
 
@@ -52,8 +53,8 @@ class MessageQueue(MessageQueueNodeProxy):
     """
 
     def __init__(self, working_dir, rpc_server, addr, addrs, 
-                 app_name=None, copies=1, n_priorities=3,
-                 deduper=None):
+                 app_name = None, copies = 1, n_priorities = 3,
+                 deduper = None):
         """
         Initialization method for the Cola message queue.
 
@@ -115,7 +116,7 @@ class MessageQueue(MessageQueueNodeProxy):
                 if not self.mq_node.deduper:
                     agent.send(False)
                 else:
-                    agent.send(self.exist(str(data)))
+                    agent.send(self.exist(labelize(data)))
             else:
                 raise ValueError('mq client can only put, put_inc, and get')
             
@@ -147,7 +148,7 @@ class MpMessageQueueClient(object):
         self.lock = multiprocessing.Lock()
 
     @lock
-    def put(self, objs, flush=False):
+    def put(self, objs, flush = False):
         self.conn.send((PUT, (objs, flush)))
         self.conn.recv()
 
@@ -157,16 +158,16 @@ class MpMessageQueueClient(object):
         self.conn.recv()
 
     @lock
-    def get(self, size=1, priority=0):
+    def get(self, size = 1, priority = 0):
         self.conn.send((GET, (size, priority)))
         return self.conn.recv()
 
     @lock
-    def get_inc(self, size=1):
+    def get_inc(self, size = 1):
         self.conn.send((GET_INC, size))
         return self.conn.recv()
 
     @lock
     def exist(self, obj):
-        self.conn.send((EXIST, str(obj)))
+        self.conn.send((EXIST, labelize(obj)))
         return self.conn.recv()

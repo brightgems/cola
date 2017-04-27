@@ -19,9 +19,10 @@ Created on 2013-5-23
 
 @author: Chine
 '''
+from six import text_type
 
 class Unit(object):
-    def __init__(self, item, force=False, priority=0):
+    def __init__(self, item, force = False, priority = 0):
         self.item = item
         self.force = force
         self.priority = priority
@@ -31,7 +32,7 @@ class Unit(object):
 
 
 class Url(Unit):
-    def __init__(self, url, force=False, priority=0):
+    def __init__(self, url, force = False, priority = 0):
         super(Url, self).__init__(url, force=force, 
                                   priority=priority)
         self.url = url
@@ -58,8 +59,8 @@ class Bundle(Unit):
     So a bundle can generate several urls.
     '''
     
-    def __init__(self, label, force=False, priority=0):
-        if not isinstance(label, str):
+    def __init__(self, label, force = False, priority = 0):
+        if not (isinstance(label, str) or isinstance(label,text_type)):
             raise ValueError("Bundle's label must a string.")
         super(Bundle, self).__init__(label, force=force,
                                      priority=priority)

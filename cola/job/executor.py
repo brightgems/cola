@@ -26,6 +26,7 @@ import hashlib
 import os
 import random
 import time
+from six import text_type
 
 from cola.core.unit import Bundle
 from cola.core.errors import ConfigurationError, LoginFailure, \
@@ -201,7 +202,7 @@ class Executor(object):
         
     def _pack_error(self, url, msg, error, content=None,
                     force_pack_content=False):
-        filename = hashlib.md5(str(url)).hexdigest()
+        filename = hashlib.md5(text_type(url)).hexdigest()
         path = os.path.join(self.dir_, 'errors', filename)
         if not os.path.exists(path):
             os.makedirs(path)
@@ -255,7 +256,7 @@ class Executor(object):
         
     def _finish(self, unit):
         if self.logger:
-            self.logger.info('Finish %s' % str(unit))
+            self.logger.info('Finish %s' % text_type(unit))
         if self.processing_inc:
             self.counter_client.local_inc(self.ip, self.id_,
                                           'inc_finishes', 1)
@@ -319,7 +320,7 @@ class UrlExecutor(Executor):
     
     def _log_error(self, url, e):
         if self.logger:
-            self.logger.error('Error when handle url: %s' % (str(url)))
+            self.logger.error('Error when handle url: %s' % (text_type(url)))
             self.logger.exception(e)
 
         url.error_times = getattr(url, 'error_times', 0) + 1
@@ -344,7 +345,7 @@ class UrlExecutor(Executor):
             content = self.opener.read()
             if content is None and isinstance(e, ServerError):
                 content = e.read()
-            msg = 'Error when handle url: %s' % str(url)
+            msg = 'Error when handle url: %s' % text_type(url)
             self._pack_error(url, msg, e, content)
             
         if not ignore:
@@ -360,7 +361,7 @@ class UrlExecutor(Executor):
         try:
             clock = Clock()
             
-            res = self._parse(parser_cls, options, str(url))
+            res = self._parse(parser_cls, options, text_type(url))
             
             t = clock.clock()
             kw = {'pages': 1, 'secs': t}
@@ -396,7 +397,7 @@ class UrlExecutor(Executor):
             return
         
         if self.logger:
-            self.logger.info('get url: %s' % str(url))
+            self.logger.info('get url: %s' % text_type(url))
         
         self.processing_inc = is_inc
         rates = 0
@@ -462,7 +463,7 @@ class BundleExecutor(Executor):
         
     def _log_error(self, bundle, url, e):
         if self.logger:
-            self.logger.error('Error when handle bundle: %s, url: %s' % (str(bundle), str(url)))
+            self.logger.error('Error when handle bundle: %s, url: %s' % (text_type(bundle), text_type(url)))
             self.logger.exception(e)
         if url == getattr(bundle, 'error_url', None):
             bundle.error_times = getattr(bundle, 'error_times', 0) + 1
@@ -496,8 +497,8 @@ class BundleExecutor(Executor):
                 content = self.opener.read()
                 if content is None and isinstance(e, ServerError):
                     content = e.read()
-                msg = 'Error when handle bundle: %s, url: %s' % (str(bundle), 
-                                                                 str(url))
+                msg = 'Error when handle bundle: %s, url: %s' % (text_type(bundle), 
+                                                                 text_type(url))
                 self._pack_error(url, msg, e, content)
                 
             if ignore:

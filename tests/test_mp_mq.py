@@ -1,3 +1,4 @@
+# coding: utf8
 '''
 Created on 2014-6-11
 
@@ -12,7 +13,6 @@ from cola.core.unit import Url
 
 class Test(unittest.TestCase):
 
-
     def setUp(self):
         self.dir_ = tempfile.mkdtemp()
         self.addr = '127.0.0.1'
@@ -24,14 +24,16 @@ class Test(unittest.TestCase):
         finally:
             shutil.rmtree(self.dir_)
 
-
     def testMqProxy(self):
         self.mq = MessageQueue(self.dir_, None, self.addr, self.addrs,
                                   copies=0, n_priorities=1)
         self.proxy = MpMessageQueueClient(self.mq.new_connection('0'))
         
         try:
-            test_obj = Url('http://qinxuye.me')
+            test_obj = Url(u'http://qinxuye.me/三星')
+            self.proxy.put(test_obj, )
+            self.assertEqual(self.proxy.get(), test_obj)
+            test_obj = u'三星'
             self.proxy.put(test_obj, )
             self.assertEqual(self.proxy.get(), test_obj)
         finally:

@@ -23,6 +23,7 @@ Created on 2013-6-27
 import urllib
 
 from cola.core.unit import Bundle
+from six import text_type
 
 class WeiboSearchBundle(Bundle):
     def __init__(self, keyword, force=False):
@@ -30,31 +31,6 @@ class WeiboSearchBundle(Bundle):
         self.keyword = keyword
         
     def urls(self):
-        return ['http://s.weibo.com/weibo/%s' % urllib.quote(self.keyword)]
+        keyword = self.keyword.encode('utf8') if isinstance(self.keyword,text_type) else self.keyword
 
-
-class WeiboUserBundle(Bundle):
-    def __init__(self, uid):
-        super(WeiboUserBundle, self).__init__(uid)
-        self.uid = uid
-        self.pid = None
-        self.domain = None
-        self.exists = True
-        
-        self.last_error_page = None
-        self.last_error_page_times = 0
-        
-        self.weibo_user = None
-        self.last_update = None
-        self.newest_mids = []
-        self.current_mblog = None
-        
-    def urls(self):
-        start = int(time.time() * (10 ** 6))
-        urls_ = [
-            ## user home page
-            'http://weibo.com/%s?is_all=1&_k=%s' % (self.uid, start),
-            
-        ]
-        
-        return urls_
+        return ['http://s.weibo.com/weibo/%s' % urllib.quote(keyword)]

@@ -67,6 +67,15 @@ class Test(unittest.TestCase):
         nums = [num, num2, num3]
         self.assertEqual(self.store.put(nums), [num3])
 
+    def testPutUnicode(self):
+        num = u'三星'
+        self.assertEqual(self.store.put(num), num)
+        self.assertEqual(self.store.put(num), None)
+        num2 = str(67890)
+        nums = [num, num2]
+        self.store.shutdown()
+        self.store.deduper.shutdown()
+
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
     unittest.main()

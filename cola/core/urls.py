@@ -21,6 +21,7 @@ Created on 2013-5-21
 '''
 
 import re
+from six import text_type
 
 class Url(object):
     def __init__(self, url_re, name, parser, **kw):
@@ -50,7 +51,7 @@ class UrlPatterns(object):
             if isinstance(url, basestring):
                 url_str = url
             else:
-                url_str = str(url)
+                url_str = text_type(url)
             for pattern in self.url_patterns:
                 if pattern_names is not None and \
                     pattern.name not in pattern_names:

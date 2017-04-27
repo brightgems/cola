@@ -1,3 +1,4 @@
+# coding: utf8
 '''
 Copyright (c) 2013 Qin Xuye <qin@qinxuye.me>
 
@@ -26,23 +27,23 @@ import random
 from cola.core.unit import Url
 from cola.core.rpc import ColaRPCServer
 from cola.core.mq import MessageQueue, MessageQueueClient
+from cola.core.utils import Clock
 
 class Test(unittest.TestCase):
 
 
     def setUp(self):
         ports = tuple([random.randint(10000, 30000) for _ in range(3)])
-        self.nodes = ['localhost:%s'%port for port in ports]
+        self.nodes = ['localhost:%s' % port for port in ports]
         self.dirs = [tempfile.mkdtemp() for _ in range(len(ports))]
         self.size = len(ports)
         
         for i in range(self.size):
-            setattr(self, 'rpc_server%s'%i, ColaRPCServer(('localhost', ports[i])))
-            setattr(self, 'mq%s'%i, 
-                MessageQueue(self.dirs[i], getattr(self, 'rpc_server%s'%i), 
-                             self.nodes[i], self.nodes[:])
-            )
-            thd = threading.Thread(target=getattr(self, 'rpc_server%s'%i).serve_forever)
+            setattr(self, 'rpc_server%s' % i, ColaRPCServer(('localhost', ports[i])))
+            setattr(self, 'mq%s' % i, 
+                MessageQueue(self.dirs[i], getattr(self, 'rpc_server%s' % i), 
+                             self.nodes[i], self.nodes[:]))
+            thd = threading.Thread(target=getattr(self, 'rpc_server%s' % i).serve_forever)
             thd.setDaemon(True)
             thd.start()
             
@@ -51,17 +52,16 @@ class Test(unittest.TestCase):
     def tearDown(self):
         try:
             for i in range(self.size):
-                getattr(self, 'rpc_server%s'%i).shutdown()
-                getattr(self, 'mq%s'%i).shutdown()
+                getattr(self, 'rpc_server%s' % i).shutdown()
+                getattr(self, 'mq%s' % i).shutdown()
         finally:
             for d in self.dirs:
                 shutil.rmtree(d)
 
-
     def testMQ(self):
         mq = self.mq0
         data = [str(random.randint(10000, 50000)) for _ in range(20)]
-                      
+        c = Clock()  
         mq.put(data, flush=True)
         gets = []
         while True:
@@ -71,7 +71,8 @@ class Test(unittest.TestCase):
             gets.append(get)
                       
         self.assertEqual(sorted(data), sorted(gets))
-                   
+        print(c.clock())   
+                 
         # test mq client
         data = str(random.randint(10000, 50000))
         self.client.put(data)
@@ -85,9 +86,11 @@ class Test(unittest.TestCase):
         # test put into different priorities
         self.client.put(Url('http://qinxuye.me', priority=0))
         self.client.put(Url('http://qinxuye.me/about', priority=1))
+        self.client.put(u'三星')
               
         self.assertEqual(self.client.get(priority=1).url, 'http://qinxuye.me/about')
         self.assertEqual(self.client.get(priority=0).url, 'http://qinxuye.me')
+        print(c.clock())  
            
     def testRemoveNode(self):
         mq = self.mq0
