@@ -49,3 +49,4 @@ job:
     like: no
     userprofile: yes
   clear: yes
+  effectivedaterange: 1M

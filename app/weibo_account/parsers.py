@@ -142,8 +142,7 @@ class MicroBlogParser(WeiboParser):
                 continue
             max_id = mid
             blog_create_date = parse(div.select('a.S_link2.WB_time')[0]['title'])
-            # skip all following blogs if create date less than effective start
-            # date
+            # skip all following blogs if create date less than effective start date
             if (blog_create_date - effective_start_date).days < 0:
                 self.logger.info("%s: blog has sync up after %s" % (self.uid,effective_start_date.strftime("%Y%m%d")))
                 finished = True

@@ -40,7 +40,7 @@ from cola.utilities.util_parse import to_unicode
 from cola.utilities.util_fetch import get_ip_proxy
 from cola.core.unit import Url
 
-from conf import user_config,starts
+from conf import user_config,starts,effective_start_date
 from bundle import WeiboSearchBundle
 from storage import DoesNotExist, Q, WeiboUser,\
                     MicroBlog, Geo, UserInfo, WorkInfo, EduInfo,\
@@ -191,28 +191,33 @@ class WeiboSearchParser(WeiboParser):
                             uid = weibo_user.uid
                             start = int(time.time() * (10 ** 6))
                             yield 'http://weibo.com/%s?is_all=1&_rnd=%s' % (uid, start)
-
+                        # skip all following blogs if create date less than effective start date
+                        blog_create_date = mblog.created
+                        if (blog_create_date - effective_start_date).days < 0:
+                            self.logger.info("%s: blog has sync up after %s" % (uid,effective_start_date.strftime("%Y%m%d")))
+                            finished = True
+                            break
                         #if finished:
                         #    self.logger.info('reach post processed last time,
                         #    quit task!')
                         #    break
                     #endregion
-                    pages = header_soup.find('div', attrs={'class': 'W_pages'})
-                    if pages is None or len(list(pages.find_all('a'))) == 0:
-                        finished = True
-                    else:
-                        next_page = pages.find_all('a')[-1]
-                        if next_page.text.strip() == u'下一页':
-                            next_href = next_page['href']
-                            if not next_href.startswith('http://'):
-                                next_href = urlparse.urljoin('http://s.weibo.com', next_href)
-                            yield next_href
-                        else:
+                    if not finished:
+                        pages = header_soup.find('div', attrs={'class': 'W_pages'})
+                        if pages is None or len(list(pages.find_all('a'))) == 0:
                             finished = True
-        
-                    if finished:
-                        bundle = Url(keyword, force=True)
-                        # return [], [bundle]
+                        else:
+                            next_page = pages.find_all('a')[-1]
+                            if next_page.text.strip() == u'下一页':
+                                next_href = next_page['href']
+                                if not next_href.startswith('http://'):
+                                    next_href = urlparse.urljoin('http://s.weibo.com', next_href)
+                                yield next_href
+                            else:
+                                finished = True
+                    #else:
+                    #    bundle = Url(keyword, force=True)
+                    # return [], [bundle]
         yield [], []
 
 class UserHomePageParser(WeiboParser):
@@ -279,7 +284,7 @@ class UserHomePageParser(WeiboParser):
                 text = text.strip().replace(';', '').replace('FM.view(', '')[:-1]
                 data = json.loads(text)
                 domid = data['domid']
-                if domid.startswith("Pl_Core_UserInfo"):
+                if domid.startswith("Pl_Core_UserInfo") and data.has_key('html'):
                     header_soup = beautiful_soup(data['html'])
                     self.extract_user_info(header_soup,weibo_user)
                 elif domid.startswith("Pl_Official_Header"):  
