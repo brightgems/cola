@@ -40,14 +40,14 @@ from cola.utilities.util_parse import to_unicode
 from cola.utilities.util_fetch import get_ip_proxy
 from cola.core.unit import Url
 
-from conf import user_config,starts,effective_start_date
+from conf import user_config, starts, effective_start_date, fetch_userprofile, fetch_related_keywords
 from bundle import WeiboSearchBundle
 from storage import DoesNotExist, Q, WeiboUser,\
                     MicroBlog, Geo, UserInfo, WorkInfo, EduInfo,\
                     Comment, Forward, Like
 
 class WeiboParser(Parser):
-    def __init__(self, opener=None, url=None, bundle=None, **kwargs):
+    def __init__(self, opener = None, url = None, bundle = None, **kwargs):
         super(WeiboParser, self).__init__(opener=opener, url=url, **kwargs)
         
         if not hasattr(self, 'logger') or self.logger is None:
@@ -75,7 +75,7 @@ class WeiboParser(Parser):
         return weibo_user
 
 class WeiboSearchParser(WeiboParser):
-    def __init__(self, opener=None, url=None, bundle=None, **kwargs):
+    def __init__(self, opener = None, url = None, bundle = None, **kwargs):
         super(WeiboSearchParser, self).__init__(opener=opener, url=url, **kwargs)
         
     def get_microblog(self, mid, keyword):
@@ -154,7 +154,7 @@ class WeiboSearchParser(WeiboParser):
         mblog.save()
         return (weibo_user,mblog)
         
-    def parse(self, url=None):
+    def parse(self, url = None):
         url = url or self.url
         
         html = to_unicode(self.opener.open(url,timeout=10))
@@ -187,11 +187,12 @@ class WeiboSearchParser(WeiboParser):
                         mblog, finished = self.get_microblog(mid, keyword)
                         weibo_user,mblog = self.save_blog_detail(dl,mblog)
 
-                        if not weibo_user.info.gender:
+                        if fetch_userprofile and not weibo_user.info.gender:
                             uid = weibo_user.uid
                             start = int(time.time() * (10 ** 6))
                             yield 'http://weibo.com/%s?is_all=1&_rnd=%s' % (uid, start)
-                        # skip all following blogs if create date less than effective start date
+                        # skip all following blogs if create date less than
+                        # effective start date
                         blog_create_date = mblog.created
                         if (blog_create_date - effective_start_date).days < 0:
                             self.logger.info("%s: blog has sync up after %s" % (uid,effective_start_date.strftime("%Y%m%d")))
@@ -218,6 +219,15 @@ class WeiboSearchParser(WeiboParser):
                     #else:
                     #    bundle = Url(keyword, force=True)
                     # return [], [bundle]
+                elif pid == "pl_weibo_relation":
+                    # only grab related keyword at 1st level
+                    if fetch_related_keywords and keyword in starts:
+                        header_soup = beautiful_soup(data['html'])
+                        rws = header_soup.find_all('a',attrs={'suda-data':'key=tblog_search_weibo&value=weibo_relate'})
+                        for w in rws:
+                            next_href = w['href']
+                            next_href = urlparse.urljoin('http://s.weibo.com', next_href)
+                            yield next_href
         yield [], []
 
 class UserHomePageParser(WeiboParser):
@@ -243,7 +253,7 @@ class UserHomePageParser(WeiboParser):
             weibo_user.info.n_msgs = int(tds[2].find('strong').text)
 
 
-    def parse(self, url=None):
+    def parse(self, url = None):
         url = url or self.url
         html = ''
         opener = self.opener

@@ -59,10 +59,8 @@ except AttributeError:
 
 instances = user_config.job.instances
 
-fetch_forward = user_config.job.fetch.forward
-fetch_comment = user_config.job.fetch.comment
-fetch_like = user_config.job.fetch.like
 fetch_userprofile = user_config.job.fetch.userprofile
+fetch_related_keywords = user_config.job.fetch.related_keywords
 
 # calculate earliest mblog to extract by create time
 from datetime import timedelta

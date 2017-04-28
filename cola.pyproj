@@ -6,14 +6,17 @@
     <ProjectGuid>{e0b97371-5135-4046-a636-012ea0e6f15a}</ProjectGuid>
     <ProjectHome />
     <StartupFile>app\weibo_account\__init__.py</StartupFile>
-    <SearchPath />
+    <SearchPath>
+    </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <InterpreterId>{9a7a9026-48c1-4688-9d5d-e5699d47d074}</InterpreterId>
+    <InterpreterId>{9b7f6c34-57eb-4cc1-a2a7-51577d652091}</InterpreterId>
     <InterpreterVersion>2.7</InterpreterVersion>
     <IsWindowsApplication>False</IsWindowsApplication>
+    <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
+    <CommandLineArguments>-m 10.139.168.84:11103</CommandLineArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
   <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
@@ -32,6 +35,7 @@
     <Content Include="app\weibo_post\requirements.txt" />
     <Content Include="app\weibo_post\weibo.yaml" />
     <Content Include="app\weibo_search\keywords.txt" />
+    <Content Include="app\weibo_search\keyword\stocks_a50.txt" />
     <Content Include="app\weibo_search\weibo.yaml" />
     <Content Include="app\wiki\requirements.txt" />
     <Content Include="app\wiki\wiki.yaml" />
@@ -154,6 +158,7 @@
     <Folder Include="app\weibo_search\" />
     <Folder Include="app\weibo_account\" />
     <Folder Include="app\weibo_post\" />
+    <Folder Include="app\weibo_search\keyword\" />
     <Folder Include="app\wiki" />
     <Folder Include="cola" />
     <Folder Include="cola\cluster" />
@@ -172,7 +177,7 @@
     <Folder Include="tests\app" />
   </ItemGroup>
   <ItemGroup>
-    <InterpreterReference Include="{9a7a9026-48c1-4688-9d5d-e5699d47d074}\2.7" />
+    <InterpreterReference Include="{9b7f6c34-57eb-4cc1-a2a7-51577d652091}\2.7" />
   </ItemGroup>
   <Import Project="$(PtvsTargetsFile)" Condition="Exists($(PtvsTargetsFile))" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" Condition="!Exists($(PtvsTargetsFile))" />

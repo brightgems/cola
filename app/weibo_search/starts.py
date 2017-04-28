@@ -28,30 +28,53 @@ from cola.core.utils import get_ip
 
 from conf import user_config
 
-PUTSIZE = 50
-keywords_f = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'keywords.txt')
+PUTSIZE = 1
+dir_ = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'keyword')
 
-def put_starts(master=None):
+def put_starts(master = None):
     if master is None:
-        nodes = ['%s:%s' % (get_ip(), getattr(user_config.job, 'port'))]
-    else:
-        nodes = client_call(master, 'get_nodes')
-        
-    mq_client = MessageQueueClient(nodes)
-    with open(keywords_f) as f:
-        keys = []
-        size = 0
-        for keyword in f.xreadlines():
-            keys.append(keyword)
-            size += 1
-            if size >= PUTSIZE:
-                mq_client.put(keys)
-                size = 0
-                keys = []
-        if len(keys) > 0:
-            mq_client.put(keys)
+        master = ['%s:%s' % (get_ip(), getattr(user_config.master, 'port'))]
+    print('master:%s' % master)
+    jobs = client_call(master, 'runnable_jobs')
+    app_name = ''
+    for a,j in jobs.items():
+        if j == "weibo search":
+            app_name = a
+            break
+    if not app_name:
+        raise Exception('weibo search job has not upload')
+    
+    nodes = client_call(master, 'list_workers')
+    addrs = []
+    default_addr = master.split(':')[0]
+    for ap,s in nodes:
+        a,p = ap.split(':')
+        if a.lower() == 'localhost':
+            addrs.append('%s:%s' % (default_addr,p))
+        else:
+            addrs.append(ap)
             
-def main(master=None):
+    mq_client = MessageQueueClient(addrs, app_name)
+    print(mq_client.get())
+    for root, dirs, files in os.walk(dir_):
+            for fn in files:
+                if not os.path.splitext(fn)[1] in [".txt"]:
+                    continue
+                keywords_f = os.path.join(root,fn)
+                with open(keywords_f) as f:
+                    keys = []
+                    size = 0
+                    for keyword in f.xreadlines():
+                        keys.append(keyword)
+                        size += 1
+                        if size >= PUTSIZE:
+                            mq_client.put(keys)
+                            size = 0
+                            keys = []
+                    if len(keys) > 0:
+                        mq_client.put(keys)
+            
+def main(master = None):
     if master is not None:
         if ':' not in master:
             master = '%s:%s' % (master, getattr(user_config.job, 'master_port'))

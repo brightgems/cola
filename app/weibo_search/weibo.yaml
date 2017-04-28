@@ -1,5 +1,7 @@
 ﻿opener:
   user_agent: Baiduspider+(+http://www.baidu.com/search/spider.htm)
+master:
+  port: 11103
 job:
   db: sina
   mode: url # also can be `bundle`
@@ -8,7 +10,7 @@ job:
     max: -1  # to the cluster, -1 means no restrictions, if greater than 0, means webpages opened per minute
     single: -1 # max restrictions to a single instance
     adaptive: no
-  instances: 4
+  instances: 1
   priorities: 2 # priorities queue count in mq
   copies: 1 # redundant size of objects in mq
   inc: no
@@ -44,9 +46,8 @@ job:
   starts:
     - keyword: tensorflow
   fetch:
-    forward: yes
-    comment: yes
-    like: no
     userprofile: yes
+    related_keywords: no
   clear: yes
-  effectivedaterange: 1M
+  effectivedaterange: 3d
+  

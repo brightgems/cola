@@ -34,7 +34,7 @@ from cola.core.errors import ConfigurationError, LoginFailure, \
                                 DependencyNotInstalledError
 from cola.core.utils import Clock, get_ip
 from cola.settings import ReadOnlySettings
-
+from cola.utilities.util_parse import to_unicode
 try:
     from collections import OrderedDict
 except ImportError:
@@ -397,7 +397,7 @@ class UrlExecutor(Executor):
             return
         
         if self.logger:
-            self.logger.info('get url: %s' % text_type(url))
+            self.logger.info('get url: %s' % to_unicode(url))
         
         self.processing_inc = is_inc
         rates = 0
