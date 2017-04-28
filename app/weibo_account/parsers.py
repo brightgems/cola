@@ -594,7 +594,7 @@ class UserInfoParser(WeiboParser):
             u'昵称': {'field': 'nickname'},
             u'所在地': {'field': 'location'},
             u'性别': {'field': 'gender'},
-            u'生日': {'field': 'birth','func': lambda v: datetime.strptime(v.encode('utf-8'),'%Y年%m月%d日')},
+            u'生日': {'field': 'birth','func': lambda v: datetime.strptime(v.replace(u'年','/').replace(u'月','/').replace(u'日',''),'%Y/%m/%d') if re.match(u'\d+年\d+月\d+日',v) else None},
             u'博客': {'field': 'blog'},
             u'个性域名': {'field': 'site'},
             u'简介': {'field': 'intro'},

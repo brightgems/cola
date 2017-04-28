@@ -46,7 +46,7 @@ user_config.job.banned_handlers.append({'action': 'clear_proxy'})
 
 user_agent = user_config.conf.opener.user_agent
 
-starts = [u'http://s.weibo.com/weibo/%s' % start.keyword for start in user_config.job.starts]
+starts = ['http://s.weibo.com/weibo/%s' % start.keyword for start in user_config.job.starts]
 
 mongo_host = user_config.job.mongo.host
 mongo_port = user_config.job.mongo.port

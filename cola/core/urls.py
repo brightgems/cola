@@ -62,7 +62,7 @@ class UrlPatterns(object):
                 
     def get_parser(self, url, pattern_names=None, options=False):
         for pattern in self.url_patterns:
-            if pattern.match(str(url)):
+            if pattern.match(text_type(url)):
                 if pattern_names is not None and \
                     pattern.name not in pattern_names:
                     continue

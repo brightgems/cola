@@ -147,7 +147,7 @@ class MicroBlogParser(WeiboParser):
             mblog.geo = geo
         # has_video
         div_video = div.find('div',attrs={'node-type':'fl_h5_video_disp'}) or div.find('span',attrs={'class':'icon_playvideo'})
-        mblog.has_video =True if div_video else False
+        mblog.has_video = True if div_video else False
         mblog.save()
         return mblog
 
@@ -441,7 +441,7 @@ class UserInfoParser(WeiboParser):
             u'昵称': {'field': 'nickname'},
             u'所在地': {'field': 'location'},
             u'性别': {'field': 'gender'},
-            u'生日': {'field': 'birth','func': lambda v: datetime.strptime(v.encode('utf-8'),'%Y年%m月%d日')},
+            u'生日': {'field': 'birth','func': lambda v: datetime.strptime(v.replace(u'年','/').replace(u'月','/').replace(u'日',''),'%Y/%m/%d') if re.match(u'\d+年\d+月\d+日',v) else None},
             u'博客': {'field': 'blog'},
             u'个性域名': {'field': 'site'},
             u'简介': {'field': 'intro'},
@@ -469,10 +469,14 @@ class UserInfoParser(WeiboParser):
                 if k in profile_map:
                     if k == u'个性域名' and '|' in v:
                         v = v.split('|')[1].strip()
+                    
                     func = (lambda s: s) \
                             if 'func' not in profile_map[k] \
                             else profile_map[k]['func']
-                    v = func(v)
+                    try:
+                        v = func(v)
+                    except:
+                        v = None
                     setattr(weibo_user.info, profile_map[k]['field'], v)
                 
         weibo_user.info.work = []

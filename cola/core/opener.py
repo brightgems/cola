@@ -61,7 +61,8 @@ class BuiltinOpener(Opener):
     def open(self, url, data=None, timeout=None):
         if timeout is None:
             timeout = self._default_timeout
-            
+        if type(url) == unicode:
+            url = urllib2.unquote(url.encode('utf-8'))    
         resp = urllib2.urlopen(url, data=data, timeout=timeout)
         is_gzip = resp.headers.dict.get('content-encoding') == 'gzip'
         if is_gzip:
@@ -133,6 +134,8 @@ class MechanizeOpener(Opener):
         self._clear_content()
         if timeout is None:
             timeout = self._default_timout
+        if type(url) == unicode:
+            url = urllib2.unquote(url.encode('utf-8'))
         self.content = self.browser.open(url, data=data, timeout=timeout).read()
         return self.content
     
@@ -154,6 +157,8 @@ class MechanizeOpener(Opener):
         if timeout is None:
             timeout = self._default_timout
         self._clear_content()
+        if type(url) == unicode:
+            url = urllib2.unquote(url.encode('utf-8'))
         self.browser.open(url, data=data, timeout=timeout)
         return self.browser
 
@@ -210,6 +215,9 @@ class SpynnerOpener(Opener):
         operation = QNetworkAccessManager.GetOperation
         if method == 'POST':
             operation = QNetworkAccessManager.PostOperation
+
+        if type(url) == unicode:
+            url = urllib2.unquote(url.encode('utf-8'))
         self.br.load(url, wait_callback=wait_callback, tries=tries, 
                      operation=operation, body=data, headers=headers, load_timeout= self._default_timout)
         
@@ -217,6 +225,8 @@ class SpynnerOpener(Opener):
         
     def open(self, url, data=None, headers=None, method='GET', 
              wait_for_text=None, wait_for_selector=None, tries=None):
+        if type(url) == unicode:
+            url = urllib2.unquote(url.encode('utf-8'))
         br = self.spynner_open(url, data=data, headers=headers, method=method, 
                                wait_for_text=wait_for_text, tries=tries)
         self.content = br.contents

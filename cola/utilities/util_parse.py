@@ -130,5 +130,6 @@ def to_unicode(s):
             except Exception as ex:
                 pass 
     # force and return only ascii subset
-    return unicode(''.join([ i if ord(i) < 128 else ' ' for i in str(s)]))
+    #return unicode(''.join([ i if ord(i) < 128 else ' ' for i in str(s)]))
+    return unicode(s)
     
