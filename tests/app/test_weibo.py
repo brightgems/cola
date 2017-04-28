@@ -37,7 +37,7 @@ from app.weibo.bundle import WeiboUserBundle
 
 from pymongo import MongoClient
 from app.weibo.tools import QT4_Py_Cookie
-from app.weibo.utils import parse_datetime
+
 from cookielib import MozillaCookieJar
 
 class Test(unittest.TestCase):
@@ -166,11 +166,6 @@ class Test(unittest.TestCase):
         user = self.users_collection.find_one({'uid': self.test_uid})
         self.assertEqual(len(bundles), len(user['follows']))
 
-    def test_parse_datetime(self):
-        from datetime import datetime
-        at= parse_datetime(u'今天 09:08')
-        ep= datetime.strptime(datetime.today().strftime('%Y%m%d')+ ' 09:08','%Y%m%d %H:%M')
-        self.assertEqual(at,ep)
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testParser']

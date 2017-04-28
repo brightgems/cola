@@ -7,16 +7,17 @@ util_parse.py by xianhu
 import re
 import operator
 import functools
+from datetime import datetime
+
 import chardet
 from six.moves import urllib
 
-__all__ = [
-    "get_string_num",
+
+__all__ = ["get_string_num",
     "get_string_split",
     "get_string_strip",
     "get_url_legal",
-    "get_url_params",
-]
+    "get_url_params",]
 
 def parse_datetime(dt_str):
     dt = None
@@ -28,13 +29,17 @@ def parse_datetime(dt_str):
         dt = datetime.now() - timedelta(seconds=sec)
     elif u'今天' in dt_str:
         dt_str = dt_str.replace(u'今天', datetime.now().strftime('%Y-%m-%d'))
-        dt = self._strptime(dt_str, '%Y-%m-%d %H:%M')
+        dt = datetime.strptime(dt_str, '%Y-%m-%d %H:%M')
+    elif u'年' in dt_str and u'月' in dt_str and u'日' in dt_str:
+        if isinstance(dt_str, unicode):
+            date_str = dt_str.encode('utf-8')
+        dt = datetime.strptime(date_str, '%Y年%m月%d日 %H:%M')
     elif u'月' in dt_str and u'日' in dt_str:
         this_year = datetime.now().year
         date_str = '%s %s' % (this_year, dt_str)
         if isinstance(date_str, unicode):
             date_str = date_str.encode('utf-8')
-        dt = self._strptime(date_str, u'%Y %m月%d日 %H:%M')
+        dt = datetime.strptime(date_str, '%Y %m月%d日 %H:%M')
     else:
         dt = parse(dt_str)
     return dt
@@ -121,9 +126,9 @@ def to_unicode(s):
         (cs, conf) = (d['encoding'], d['confidence'])
         if conf > 0.80:
             try:
-                return s.decode( cs, errors = 'replace' )
+                return s.decode(cs, errors = 'replace')
             except Exception as ex:
                 pass 
     # force and return only ascii subset
-    return unicode(''.join( [ i if ord(i) < 128 else ' ' for i in s ]))
+    return unicode(''.join([ i if ord(i) < 128 else ' ' for i in str(s)]))
     

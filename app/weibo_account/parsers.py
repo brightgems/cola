@@ -366,14 +366,6 @@ class UserHomePageParser(WeiboParser):
             yield 'http://weibo.com/p/%s/info' %  pid_
 
 class ForwardCommentLikeParser(WeiboParser):
-    strptime_lock = Lock()
-    
-    def _strptime(self, string, format_):
-        self.strptime_lock.acquire()
-        try:
-            return datetime.strptime(string, format_)
-        finally:
-            self.strptime_lock.release()
         
     def parse_datetime(self, dt_str):
         dt = None
@@ -385,13 +377,13 @@ class ForwardCommentLikeParser(WeiboParser):
             dt = datetime.now() - timedelta(seconds=sec)
         elif u'今天' in dt_str:
             dt_str = dt_str.replace(u'今天', datetime.now().strftime('%Y-%m-%d'))
-            dt = self._strptime(dt_str, '%Y-%m-%d %H:%M')
+            dt = datetime.strptime(dt_str, '%Y-%m-%d %H:%M')
         elif u'月' in dt_str and u'日' in dt_str:
             this_year = datetime.now().year
             date_str = '%s %s' % (this_year, dt_str)
             if isinstance(date_str, unicode):
                 date_str = date_str.encode('utf-8')
-            dt = self._strptime(date_str, '%Y %m月%d日 %H:%M')
+            dt = datetime.strptime(date_str, '%Y %m月%d日 %H:%M')
         else:
             dt = parse(dt_str)
         return dt
@@ -576,7 +568,7 @@ class UserInfoParser(WeiboParser):
                     weibo_user.info.verified = True if bs_verified else False
                     bs_vip = header_soup.find('a',attrs={"suda-uatrack":"key=home_vip&value=home_feed_vip"})
                     weibo_user.info.vip = True if bs_vip else False
-                    weibo_user.info.pf_intro = header_soup.find('div', attrs={'class': 'pf_intro'}).text
+                    weibo_user.info.intro = header_soup.find('div', attrs={'class': 'pf_intro'}).text
                 elif domid.startswith('Pl_Official_RightGrowNew'):
                     header_soup = beautiful_soup(data['html'])
                     weibo_user.info.level_score = int(header_soup.find('p',attrs={'class':'level_info'}).find_all('span',attrs={'class':'S_txt1'})[1].text.strip())
@@ -602,7 +594,7 @@ class UserInfoParser(WeiboParser):
             u'昵称': {'field': 'nickname'},
             u'所在地': {'field': 'location'},
             u'性别': {'field': 'gender'},
-            u'生日': {'field': 'birth'},
+            u'生日': {'field': 'birth','func': lambda v: datetime.strptime(v.encode('utf-8'),'%Y年%m月%d日')},
             u'博客': {'field': 'blog'},
             u'个性域名': {'field': 'site'},
             u'简介': {'field': 'intro'},

@@ -165,6 +165,7 @@ class WeiboSearchParser(WeiboParser):
         try:
             keyword = re.findall("CONFIG\['s_search'\]\s+=\s+'(.*)'",html)[0]
         except:
+            self.logger.error(html)
             raise FetchBannedError("get banned on user page")
         
 

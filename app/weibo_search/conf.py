@@ -40,8 +40,9 @@ while i < 50:
     if not p_:
         break
     user_config.job.banned_handlers.insert(1,{'action': 'proxy','addr':p_})    
-    #user_config.job.proxys.append({'addr':p_,'type':'http'})
+    user_config.job.proxys.append({'addr':p_,'type':'http'})
     i += 1
+user_config.job.banned_handlers.append({'action': 'clear_proxy'})
 
 user_agent = user_config.conf.opener.user_agent
 

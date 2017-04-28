@@ -31,7 +31,7 @@ from conf import user_config
 PUTSIZE = 1
 dir_ = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'keyword')
 
-def put_starts(master = None):
+def put_starts(master=None):
     if master is None:
         master = ['%s:%s' % (get_ip(), getattr(user_config.master, 'port'))]
     print('master:%s' % master)
@@ -55,7 +55,7 @@ def put_starts(master = None):
             addrs.append(ap)
             
     mq_client = MessageQueueClient(addrs, app_name)
-    print(mq_client.get())
+    print('get:%s' % mq_client.get())
     for root, dirs, files in os.walk(dir_):
             for fn in files:
                 if not os.path.splitext(fn)[1] in [".txt"]:
@@ -74,10 +74,10 @@ def put_starts(master = None):
                     if len(keys) > 0:
                         mq_client.put(keys)
             
-def main(master = None):
+def main(master=None):
     if master is not None:
         if ':' not in master:
-            master = '%s:%s' % (master, getattr(user_config.job, 'master_port'))
+            master = '%s:%s' % (master, getattr(user_config.master, 'port'))
     put_starts(master)
             
 if __name__ == "__main__":

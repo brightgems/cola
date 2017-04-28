@@ -101,7 +101,7 @@ class UserInfo(EmbeddedDocument):
     avatar = URLField()
     location = StringField()
     gender = StringField()
-    birth = StringField()
+    birth = DateTimeField()
     blog = URLField()
     site = URLField()
     intro = StringField()

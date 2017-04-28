@@ -50,5 +50,9 @@ job:
     comment: yes
     like: no
     userprofile: yes
+  banned_handlers:
+    - action: relogin
+    - action: proxy
+    - action: clear_proxy
   clear: yes
   effectivedaterange: 1M

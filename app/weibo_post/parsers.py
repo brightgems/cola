@@ -305,7 +305,7 @@ class ForwardCommentLikeParser(WeiboParser):
                 
                 mblog.likes.append(like)
                 weibo_user = self.get_weibo_user(uid)
-                if fetch_userprofile and not (weibo_user.info):
+                if fetch_userprofile and (not weibo_user.info):
                     yield 'http://weibo.com/%s/info?_rnd=%s' % (uid, start)
         mblog.save()
 
@@ -441,7 +441,7 @@ class UserInfoParser(WeiboParser):
             u'昵称': {'field': 'nickname'},
             u'所在地': {'field': 'location'},
             u'性别': {'field': 'gender'},
-            u'生日': {'field': 'birth'},
+            u'生日': {'field': 'birth','func': lambda v: datetime.strptime(v.encode('utf-8'),'%Y年%m月%d日')},
             u'博客': {'field': 'blog'},
             u'个性域名': {'field': 'site'},
             u'简介': {'field': 'intro'},
