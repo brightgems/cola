@@ -16,7 +16,7 @@
     <InterpreterVersion>2.7</InterpreterVersion>
     <IsWindowsApplication>False</IsWindowsApplication>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
-    <CommandLineArguments>-m 10.139.168.84:11103</CommandLineArguments>
+    <CommandLineArguments>-f E:\git\crawlproject\sinaGetToken\sinaGetToken\userpwd</CommandLineArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
   <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
@@ -58,6 +58,9 @@
     <Compile Include="app\weibo_account\__init__.py" />
     <Compile Include="app\weibo_search\bundle.py" />
     <Compile Include="app\weibo_search\conf.py" />
+    <Compile Include="app\weibo_search\cookiepool.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="app\weibo_search\login.py" />
     <Compile Include="app\weibo_search\parsers.py" />
     <Compile Include="app\weibo_search\starts.py" />
@@ -159,6 +162,7 @@
     <Folder Include="app\weibo_account\" />
     <Folder Include="app\weibo_post\" />
     <Folder Include="app\weibo_search\keyword\" />
+    <Folder Include="app\weibo_search\cookies\" />
     <Folder Include="app\wiki" />
     <Folder Include="cola" />
     <Folder Include="cola\cluster" />

@@ -48,7 +48,7 @@ class WeiboLogin(object):
         self.weibo_url = 'http://weibo.com/'
         self.prelogin_url = 'https://login.sina.com.cn/sso/prelogin.php'
         self.login_url = 'http://login.sina.com.cn/sso/login.php?client=ssologin.js(v1.4.18)'
-        self.captcha_url ='http://login.sina.com.cn/cgi/pin.php'
+        self.captcha_url = 'http://login.sina.com.cn/cgi/pin.php'
         
     def get_user(self, username):
         username = urllib.quote(username)
@@ -78,7 +78,8 @@ class WeiboLogin(object):
         return pic
 
     def get_verify_cd(self,pic):
-        ydm = YunDaMa("brtgpy", "8ik,*IK<")
+        #ydm = YunDaMa("brtgpy", "8ik,*IK<",)
+        ydm = YunDaMa("Germey", "940629cqc","3372","1b586a30bfda5c7fa71c881075ba49d0")
         cid_t, code_t = ydm.get_captcha("captcha.jpeg", pic)
         print(cid_t, code_t)
         if cid_t and (not code_t):
@@ -102,7 +103,60 @@ class WeiboLogin(object):
             raise WeiboLoginFailure
         
     def login(self):
-        login_url = 'http://login.sina.com.cn/sso/login.php?client=ssologin.js(v1.4.18)'
+        def login_sina(postdata, showpin, pcid):
+            if showpin == 1:
+                pic = self.getPin(pcid)
+                vcode = self.get_verify_cd(pic)
+                if vcode:
+                    postdata['door'] = vcode
+                    postdata['cdult'] = 2
+                    postdata['pcid'] = pcid
+                    postdata['prelt'] = 2041
+                else:
+                    self.logger.warn("failed yudama")
+                    return False
+            
+            form_data = urllib.urlencode(postdata)
+            text = self.opener.open(self.login_url, form_data)
+
+            # Fix for new login changed since about 2014-3-28
+            
+            if "retcode" in text:
+                json_data = json.loads(text)
+                if 'reason' in json_data:
+                    self.logger.warn("login failed as %s, reason:%s" % (self.username,json_data['reason']))
+                    if u'验证码' in json_data['reason']:
+                        servertime, nonce, pubkey, rsakv,showpin,pcid = self.prelogin()
+                        postdata = {
+                            'entry': 'weibo',
+                            'gateway': '1',
+                            'from': '',
+                            'savestate': '7',
+                            'userticket': '1',
+                            'pagerefer': 'http://login.sina.com.cn/sso/logout.php',
+                            'vsnf': '1',
+                            'su': self.get_user(self.username),
+                            'service': 'weibo',
+                            'servertime': servertime,
+                            'nonce': nonce,
+                            'pwencode': 'rsa2',
+                            'rsakv' : rsakv,				
+                            'sp': self.get_passwd(self.passwd, pubkey, servertime, nonce),
+                            'sr': '1920*1080',				
+                            'encoding': 'UTF-8',
+                            'prelt': '115',
+                            'cdult':3,
+                            'returntype': 'TEXT'
+                        }
+                        login_sina(postdata,True,pcid)
+                    return False
+                else:
+                    ajax_url = json_data['crossDomainUrlList'][0]
+                    text = self.opener.open(ajax_url)
+            else:
+                return False  
+            self.logger.info("weibo login successfuly as `%s`" % self.username)
+            return True   
         
         try:
             servertime, nonce, pubkey, rsakv,showpin,pcid = self.prelogin()
@@ -127,33 +181,6 @@ class WeiboLogin(object):
                 'cdult':3,
                 'returntype': 'TEXT'
             }
-
-            if showpin == 1:
-                pic = self.getPin(pcid)
-                vcode = self.get_verify_cd(pic)
-                if vcode:
-                    postdata['door'] = vcode
-                    postdata['cdult'] = 2
-                    postdata['pcid'] = pcid
-                    postdata['prelt'] = 2041
-                else:
-                    self.logger.warn("failed yudama")
-            
-            postdata = urllib.urlencode(postdata)
-            text = self.opener.open(login_url, postdata)
-
-            # Fix for new login changed since about 2014-3-28
-            
-            if "retcode" in text:
-                json_data = json.loads(text)
-                if 'reason' in json_data:
-                    return False, json_data['reason']
-                else:
-                    ajax_url = json_data['crossDomainUrlList'][0]
-                    text = self.opener.open(ajax_url)
-            else:
-                return False        
-            self.logger.info("weibo login successfuly as `%s`" % self.username)
-            return(True)			
-        except WeiboLoginFailure:
+            return login_sina(postdata,showpin,pcid)
+        except WeiboLoginFailure as ex:
             return False

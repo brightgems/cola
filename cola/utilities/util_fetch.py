@@ -15,7 +15,7 @@ __all__ = ["make_random_useragent",]
 
 
 lshttp_ = None
-def get_ip_proxy():
+def get_ip_proxy(size=50):
     '''
     >>> get_ip_proxy()
     
@@ -30,14 +30,14 @@ def get_ip_proxy():
             proxys = json.loads(rsp.text)
             lshttp_ = [p_ for p_ in proxys if p_['type'] != 'https']
             # get china vip as replacement if vip count is less than 50
-            if len(lshttp_) < 50:
+            if len(lshttp_) < size:
                 rsp = requests.get(china_ipproxy_url,auth=auth_)
                 proxys = json.loads(rsp.text)
                 lshttp_.extend([p_ for p_ in proxys if p_['type'] != 'https'])
         except HTTPException, ex:
             return
     
-    p_ = random.choice(lshttp_[:50])
+    p_ = random.choice(lshttp_[:size])
     return p_['addr']
 
 def make_random_useragent(ua_type="pc"):
