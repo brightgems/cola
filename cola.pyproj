@@ -25,6 +25,9 @@
     <PtvsTargetsFile>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets</PtvsTargetsFile>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="app\douban_movie\README.rst" />
+    <Content Include="app\douban_movie\requirements.txt" />
+    <Content Include="app\douban_movie\douban.yaml" />
     <Content Include="app\exchange_rate\README.rst" />
     <Content Include="app\impmaker\requirements.txt" />
     <Content Include="app\impmaker\impmaker.yaml" />
@@ -40,9 +43,14 @@
     <Content Include="app\wiki\requirements.txt" />
     <Content Include="app\wiki\wiki.yaml" />
     <Content Include="cola\conf\main.yaml" />
+    <Content Include="README.rst" />
     <Content Include="requirements.txt" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="app\douban_movie\conf.py" />
+    <Compile Include="app\douban_movie\parsers.py" />
+    <Compile Include="app\douban_movie\storage.py" />
+    <Compile Include="app\douban_movie\__init__.py" />
     <Compile Include="app\exchange_rate\__init__.py">
       <SubType>Code</SubType>
     </Compile>
@@ -132,6 +140,7 @@
     <Compile Include="lab\generic\__init__.py" />
     <Compile Include="setup.py" />
     <Compile Include="tests\app\test_weibo.py" />
+    <Compile Include="tests\app\test_douban.py" />
     <Compile Include="tests\app\test_wiki.py" />
     <Compile Include="tests\app\__init__.py" />
     <Compile Include="tests\test_bloomfilter.py" />
@@ -158,6 +167,7 @@
     <Folder Include="app" />
     <Folder Include="app\exchange_rate\" />
     <Folder Include="app\impmaker\" />
+    <Folder Include="app\douban_movie\" />
     <Folder Include="app\weibo_search\" />
     <Folder Include="app\weibo_account\" />
     <Folder Include="app\weibo_post\" />
