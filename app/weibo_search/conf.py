@@ -32,17 +32,19 @@ if not os.path.exists(user_conf):
 user_config = Config(user_conf)
 # set proxys
 i = 0
-user_config.job.proxys = []
-user_config.job.banned_handlers = [{'action': 'relogin'}]
+proxies_ = []
+banned_handlers_ =  [{'action': 'relogin'}]
 
-while i < 50:
+while i < 100:
     p_ = get_ip_proxy()
     if not p_:
         break
-    user_config.job.banned_handlers.insert(1,{'action': 'proxy','addr':p_})    
-    user_config.job.proxys.append({'addr':p_,'type':'http'})
+    banned_handlers_.insert(1,{'action': 'proxy','addr':p_})    
+    proxies_.append({'addr':p_,'type':'http'})
     i += 1
-user_config.job.banned_handlers.append({'action': 'clear_proxy'})
+
+user_config.conf.job.update(banned_handlers=banned_handlers_,
+        proxies = proxies_)
 
 user_agent = user_config.conf.opener.user_agent
 

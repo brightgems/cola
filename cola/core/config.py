@@ -125,7 +125,7 @@ class Config(object):
     def __getitem__(self, name):
         return getattr(self, name)
 
-
+                
 class ReadOnlyConfig(Config):
 
     __inited = False
@@ -146,6 +146,5 @@ class ReadOnlyConfig(Config):
         else:
             super(ReadOnlyConfig, self).__setattr__(key, value)
     
-conf_dir = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'conf')
+conf_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'conf')
 main_conf = Config(os.path.join(conf_dir, 'main.yaml'))

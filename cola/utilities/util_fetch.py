@@ -15,7 +15,7 @@ __all__ = ["make_random_useragent",]
 
 
 lshttp_ = None
-def get_ip_proxy(size=50):
+def get_ip_proxy(size=50, https=False):
     '''
     >>> get_ip_proxy()
     
@@ -25,15 +25,17 @@ def get_ip_proxy(size=50):
         fast_ipproxy_url = "http://ipmomentum.online/api/proxy/fast"
         china_ipproxy_url = "http://ipmomentum.online/api/proxy/china"
         auth_ = ('eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MX0._6jmLfy5i96Ux_fLqIXwTHySY8rdSjvHGJw5VedbZ1I','unset')
+
+        iptype = 'https' if https else 'http'
         try:
             rsp = requests.get(fast_ipproxy_url,auth=auth_)
             proxys = json.loads(rsp.text)
-            lshttp_ = [p_ for p_ in proxys if p_['type'] != 'https']
+            lshttp_ = [p_ for p_ in proxys if p_['type'] == iptype or p_['type'] == 'all']
             # get china vip as replacement if vip count is less than 50
             if len(lshttp_) < size:
                 rsp = requests.get(china_ipproxy_url,auth=auth_)
                 proxys = json.loads(rsp.text)
-                lshttp_.extend([p_ for p_ in proxys if p_['type'] != 'https'])
+                lshttp_.extend([p_ for p_ in proxys if p_['type'] == iptype or p_['type'] == 'all'])
         except HTTPException, ex:
             return
     

@@ -22,7 +22,7 @@ Created on 2013-6-8
 
 import re
 from datetime import datetime
-
+import urlparse
 
 from cola.core.parsers import Parser
 from cola.core.utils import beautiful_soup
@@ -31,13 +31,12 @@ from cola.core.logs import get_logger
 from cola.core.opener import MechanizeOpener
 from cola.core.errors import DependencyNotInstalledError,\
                              LoginFailure
+from cola.utilities.util_fetch import get_ip_proxy
 from urllib2 import URLError
 
 from storage import DoesNotExist, DoubanMovie
-import urlparse
 
-
-TIMEOUT = 30.0
+TIMEOUT = 15.0
 
 class DoubanLoginFailure(LoginFailure): pass
 
@@ -90,6 +89,7 @@ class DoubanMovieParser(Parser):
                 
         url = url or self.url
         sid = self.get_subject_id(url)
+        self.logger.debug('proxy:{}'.format(self.opener.proxies))
 
         try:        
             br = self.opener.browse_open(url)

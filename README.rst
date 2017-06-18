@@ -176,6 +176,34 @@ Notes
 
 `Chinese docs(wiki) <https://github.com/chineking/cola/wiki>`_.
 
+Applications
+=====
+applications developed based on cola:
+- wiki 
+
+    crawl term text description from wikipedia
+- douban_movie
+    
+    crawl douban movie profile 
+- weibo_search
+
+    crawl weibo posts by search keyword
+- weibo_post
+
+    crawl weibo posts by post url
+- weibo_account
+
+    crawl weibo posts by account url
+
+History
+========
+    
+**2017 JUN updates:**
+
+   * add douban_movie application based on cola framework
+   * add test case for douban movie app
+
+
 Donation
 ========
 

@@ -113,13 +113,14 @@ class Executor(object):
         if self.settings.job.has('proxies'):
             proxies = self.settings.job.proxies
             try:
-                for p in proxies:
-                    proxy_type = p.type if p.has('type') else 'all'
-                    if p.has('addr'):
-                        self.opener.add_proxy(p.addr, 
-                            proxy_type=proxy_type,
-                            user=p.user if p.has('user') else None,
-                            password=p.password if p.has('password') else None)
+                # select random proxy
+                p = random.choice(proxies)
+                proxy_type = p.type if p.has('type') else 'all'
+                if p.has('addr'):
+                    self.opener.add_proxy(p.addr, 
+                        proxy_type=proxy_type,
+                        user=p.user if p.has('user') else None,
+                        password=p.password if p.has('password') else None)
             except TypeError:
                 return
             

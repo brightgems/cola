@@ -40,7 +40,7 @@ url_patterns = UrlPatterns(Url('https://movie.douban.com/subject/\d+.*', 'subjec
 
 def get_job_desc():
     return JobDescription('douban spider', url_patterns, MechanizeOpener, user_config, 
-                          starts)
+                          starts )
     
 if __name__ == "__main__":
     from cola.context import Context
