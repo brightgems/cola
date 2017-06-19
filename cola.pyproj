@@ -12,7 +12,7 @@
     <OutputPath>.</OutputPath>
     <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <InterpreterId>{9a7a9026-48c1-4688-9d5d-e5699d47d074}</InterpreterId>
+    <InterpreterId>{9b7f6c34-57eb-4cc1-a2a7-51577d652091}</InterpreterId>
     <InterpreterVersion>2.7</InterpreterVersion>
     <IsWindowsApplication>False</IsWindowsApplication>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
@@ -31,6 +31,30 @@
     <Content Include="app\exchange_rate\README.rst" />
     <Content Include="app\impmaker\requirements.txt" />
     <Content Include="app\impmaker\impmaker.yaml" />
+    <Content Include="app\weibo_account\cookies\1.txt" />
+    <Content Include="app\weibo_account\cookies\10.txt" />
+    <Content Include="app\weibo_account\cookies\11.txt" />
+    <Content Include="app\weibo_account\cookies\12.txt" />
+    <Content Include="app\weibo_account\cookies\13.txt" />
+    <Content Include="app\weibo_account\cookies\14.txt" />
+    <Content Include="app\weibo_account\cookies\15.txt" />
+    <Content Include="app\weibo_account\cookies\16.txt" />
+    <Content Include="app\weibo_account\cookies\17.txt" />
+    <Content Include="app\weibo_account\cookies\18.txt" />
+    <Content Include="app\weibo_account\cookies\19.txt" />
+    <Content Include="app\weibo_account\cookies\2.txt" />
+    <Content Include="app\weibo_account\cookies\20.txt" />
+    <Content Include="app\weibo_account\cookies\21.txt" />
+    <Content Include="app\weibo_account\cookies\22.txt" />
+    <Content Include="app\weibo_account\cookies\23.txt" />
+    <Content Include="app\weibo_account\cookies\24.txt" />
+    <Content Include="app\weibo_account\cookies\3.txt" />
+    <Content Include="app\weibo_account\cookies\4.txt" />
+    <Content Include="app\weibo_account\cookies\5.txt" />
+    <Content Include="app\weibo_account\cookies\6.txt" />
+    <Content Include="app\weibo_account\cookies\7.txt" />
+    <Content Include="app\weibo_account\cookies\8.txt" />
+    <Content Include="app\weibo_account\cookies\9.txt" />
     <Content Include="app\weibo_account\README.rst" />
     <Content Include="app\weibo_account\requirements.txt" />
     <Content Include="app\weibo_account\weibo.yaml" />
@@ -58,6 +82,7 @@
     <Compile Include="app\impmaker\__init__.py" />
     <Compile Include="app\weibo_account\bundle.py" />
     <Compile Include="app\weibo_account\conf.py" />
+    <Compile Include="app\weibo_account\cookiepool.py" />
     <Compile Include="app\weibo_account\login.py" />
     <Compile Include="app\weibo_account\parsers.py" />
     <Compile Include="app\weibo_account\storage.py" />
@@ -168,6 +193,7 @@
     <Folder Include="app\exchange_rate\" />
     <Folder Include="app\impmaker\" />
     <Folder Include="app\douban_movie\" />
+    <Folder Include="app\weibo_account\cookies\" />
     <Folder Include="app\weibo_search\" />
     <Folder Include="app\weibo_account\" />
     <Folder Include="app\weibo_post\" />

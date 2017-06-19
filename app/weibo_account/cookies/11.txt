@@ -1,0 +1,16 @@
+#LWP-Cookies-2.0
+Set-Cookie3: ALC="ac%3D27%26bt%3D1493811899%26cv%3D5.0%26et%3D1525347899%26scf%3D%26uid%3D2674940137%26vf%3D1%26vs%3D0%26vt%3D4%26es%3Db71f8bd4392ba3fd9bf0cab9adc23ace"; path="/"; domain=".login.sina.com.cn"; path_spec; expires="2018-05-03 11:44:59Z"; httponly=None; version=0
+Set-Cookie3: LT=1493811899; path="/"; domain=".login.sina.com.cn"; path_spec; discard; version=0
+Set-Cookie3: tgc="TGT-MjY3NDk0MDEzNw==-1493811899-gz-C7D5AEE44AE547CBCE7A647F5EBFDDA1-1"; path="/"; domain=".login.sina.com.cn"; path_spec; discard; Httponly=None; version=0
+Set-Cookie3: SRF=1493811901; path="/"; domain=".passport.weibo.com"; path_spec; domain_dot; expires="2027-05-01 11:45:01Z"; version=0
+Set-Cookie3: SRT="D.QqHBJZ4nMFHJWmMbPFYGSPHHirSSdObDiruuMGPHNEYddFPoOdopMERt4EPKRcsrAcPJP-brTsVuR3SKic4kO!WYOPiOTEi8JE98Jrib4-iKR-H3I8t7*B.vAflW-P9Rc0lR-ykUDvnJqiQVbiRVPBtS!r3JZPQVqbgVdWiMZ4siOzu4DbmKPWQNE9i5GP8T39FOsWHdbW8UsHmA3Hei49ndDPIJcYPSrnlMcywRsJnAZMOTDPnSOBiJcM1OFyHi3vrKPBOQ3Ee4ZVoKEbN4qBoWv77"; path="/"; domain=".passport.weibo.com"; path_spec; domain_dot; expires="2027-05-01 11:45:01Z"; httponly=None; version=0
+Set-Cookie3: ALF=1525347899; path="/"; domain=".sina.com.cn"; path_spec; domain_dot; expires="2018-05-03 11:44:59Z"; version=0
+Set-Cookie3: SUB="_2A250DbLrDeThGeRI7FYY9C7NyDuIHXVXeqMjrDV_PUNbm9BeLUrykW97Z0NIkfJP9O_RQW7BCrJCQyIp_Q.."; path="/"; domain=".sina.com.cn"; path_spec; domain_dot; discard; HttpOnly=None; version=0
+Set-Cookie3: SUBP=0033WrSXqPxfM725Ws9jqgMF55529P9D9WWHZMxubkzFOWIZWboRDCrg5NHD95QESoMX1KB7eKeNWs4DqcjewgH0dg8Vehyk1hMc; path="/"; domain=".sina.com.cn"; path_spec; domain_dot; discard; version=0
+Set-Cookie3: ULOGIN_IMG="gz-619900e72bc66c5d5518ccb59c8d0f5b6517"; path="/"; domain=".sina.com.cn"; path_spec; domain_dot; discard; version=0
+Set-Cookie3: sso_info=v02m6alo5qztaObtpGlnKKZtZqWkL2Mo5i3jYOktIyDhLONsMDA; path="/"; domain=".sina.com.cn"; path_spec; domain_dot; expires="2018-05-03 11:44:59Z"; version=0
+Set-Cookie3: ALF=1525347899; path="/"; domain=".weibo.com"; path_spec; domain_dot; expires="2018-05-03 11:44:59Z"; version=0
+Set-Cookie3: SSOLoginState=1493811901; path="/"; domain=".weibo.com"; path_spec; domain_dot; discard; version=0
+Set-Cookie3: SUB="_2A250DbLtDeThGeRI7FYY9C7NyDuIHXVXeqMlrDV8PUNbmtBeLWitkW9cvN6e-NGaMSShSb0Zb3CeScNcbw.."; path="/"; domain=".weibo.com"; path_spec; domain_dot; discard; HttpOnly=None; version=0
+Set-Cookie3: SUBP="0033WrSXqPxfM725Ws9jqgMF55529P9D9WWHZMxubkzFOWIZWboRDCrg5JpX5K2hUgL.FozcS0B4Sh5pe0M2dJLoI7p49PS_qgR718YRS0qt"; path="/"; domain=".weibo.com"; path_spec; domain_dot; expires="2018-05-03 11:45:01Z"; version=0
+Set-Cookie3: SUHB=0rrqX8AHkD09f5; path="/"; domain=".weibo.com"; path_spec; domain_dot; expires="2018-05-03 11:45:01Z"; version=0
