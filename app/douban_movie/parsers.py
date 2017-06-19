@@ -41,7 +41,7 @@ TIMEOUT = 15.0
 class DoubanLoginFailure(LoginFailure): pass
 
 class DoubanMovieParser(Parser):
-    def __init__(self, opener=None, url=None, bundle=None, **kwargs):
+    def __init__(self, opener = None, url = None, bundle = None, **kwargs):
         super(DoubanMovieParser, self).__init__(opener=opener, url=url, **kwargs)
         if self.opener is None:
             self.opener = MechanizeOpener()
@@ -85,7 +85,7 @@ class DoubanMovieParser(Parser):
         return movie
 
 
-    def parse(self, url=None):
+    def parse(self, url = None):
                 
         url = url or self.url
         sid = self.get_subject_id(url)
@@ -177,10 +177,10 @@ class DoubanMovieParser(Parser):
             self.logger.critical('{0} has no pubdate'.format(sid))
             pubdate = year
         # append month/date if just year is known
-        if len(pubdate)==4:
-            pubdate = pubdate + "-12-30"
-        elif len(pubdate)==7:
-            pubdate = pubdate + "-30"
+        if len(pubdate) == 4:
+            pubdate = pubdate + "-6-30"
+        elif len(pubdate) == 7:
+            pubdate = pubdate + "-15"
         pubdate = datetime.strptime(pubdate, '%Y-%m-%d')
 
         # get wishes
@@ -210,16 +210,16 @@ class DoubanMovieParser(Parser):
         # season
         season_tags = soup.select('div #info select#season]')
         if season_tags:
-            episodes_count = season_tags.count  
-            current_season = season_tags[0].select('option[selected]')[0].text     
+            movie.seasons_count = season_tags.count  
+            movie.current_season = season_tags[0].select('option[selected]')[0].text     
         photo_url = soup.select('a[class="nbgnbg"] img')[0].attrs['src']
         #region save movie
         info_map = {
             u'制片国家/地区': {'field': 'countries'},
             u'语言': {'field': 'languages'},
-            u'集数': {'field': 'episodes_count'},
-            u'单集片长': {'field': 'duration'},
-            u'片长': {'field': 'duration'},
+            u'集数': {'field': 'episodes_count','func': lambda v:  re.findall('(\d+).*',v)[0]},
+            u'单集片长': {'field': 'duration','func': lambda v:  re.findall('(\d+).*',v)[0]},
+            u'片长': {'field': 'duration','func': lambda v:  re.findall('(\d+).*',v)[0]},
             u'又名': {'field': 'aka','func': lambda v: v.split('/')},
             u'IMDb链接':{'field':'imdb_id'}
         }
@@ -231,7 +231,7 @@ class DoubanMovieParser(Parser):
                 func = (lambda s: s.strip()) \
                             if 'func' not in f \
                             else f['func']
-                f_val = func(v[0])
+                f_val = func(v[0].strip())
                 setattr(movie, f['field'], f_val)
         movie.sid = sid
         movie.title = title
@@ -256,7 +256,7 @@ class DoubanMovieParser(Parser):
         movie.alt = url
         movie.last_update = datetime.now()
         movie.save()
-
+        
         def _is_same(out_url,url):
             return out_url.rsplit('#', 1)[0] == url
 

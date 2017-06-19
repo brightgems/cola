@@ -10,7 +10,7 @@ job:
     adaptive: no
   instances: 2
   priorities: 3 # priorities queue count in mq
-  copies: 1 # redundant size of objects in mq
+  copies: 2 # redundant size of objects in mq
   inc: no
   shuffle: yes # only work in bundle mode, means the urls in a bundle will shuffle before fetching
   error:

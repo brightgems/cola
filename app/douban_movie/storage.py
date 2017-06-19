@@ -45,7 +45,7 @@ class DoubanMovie(Document):
     
     title = StringField()
     original_title = StringField()
-    aka = ListField(StringField(max_length=50))
+    aka = ListField(StringField(max_length=500))
     tags = ListField(StringField(max_length=50))
     alt = URLField()
     rating = FloatField()

@@ -29,17 +29,17 @@ class Test(unittest.TestCase):
 
     def testDoubanMovieParser(self):
         parser = DoubanMovieParser()
-        url = 'https://movie.douban.com/subject/26322642/'
+        url = 'https://movie.douban.com/subject/2224146/'
         parser.parse(url)
         
         from pymongo import MongoClient
         conn = MongoClient(mongo_host, mongo_port)
         db = getattr(conn, db_name)
-        movie = db.douban_movie.find_one({'title': u'红楼梦'})
+        movie = db.douban_movie.find_one({'sid': '2224146'})
         self.assertIsNotNone(movie)
-        
+        self.assertTrue(movie['casts'] != [])
+        print(movie)
         #db.douban_movie.remove({'title': u'红楼梦'})
-
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
     unittest.main()
