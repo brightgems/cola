@@ -29,7 +29,7 @@ class Test(unittest.TestCase):
 
     def testDoubanMovieParser(self):
         parser = DoubanMovieParser()
-        url = 'https://movie.douban.com/subject/3014183'
+        url = 'https://movie.douban.com/subject/26322642/'
         parser.parse(url)
         
         from pymongo import MongoClient

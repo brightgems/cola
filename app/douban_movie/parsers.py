@@ -118,8 +118,8 @@ class DoubanMovieParser(Parser):
         # self.logger.debug(title)
 
         summary_tags = soup.select("span[property='v:summary']")
-        if summary_tags:
-            summary = summary_tags[0].text
+        summary = summary_tags[0].text if summary_tags else ''
+            
         # tags
         tag_tags = soup.select('div .tags-body a')
         tags = [t.text for t in tag_tags]
@@ -201,9 +201,11 @@ class DoubanMovieParser(Parser):
                 collect_count = m.group('collections')
             
         rating_num = soup.select(r'strong.rating_num')[0].text
+        if not rating_num:
+            rating_num = None
         rating_lvls = soup.select(r'div.ratings-on-weight span.rating_per')
-        
-        rating_lvls = [float(r.text[:-1])  for r in rating_lvls]
+        if rating_lvls:
+            rating_lvls = [float(r.text[:-1])  for r in rating_lvls]
         
         # season
         season_tags = soup.select('div #info select#season]')
@@ -242,8 +244,9 @@ class DoubanMovieParser(Parser):
         movie.casts = casts
         movie.writers = writers
         movie.rating = float(rating_num)
-        movie.high_rating_pct = rating_lvls[0] + rating_lvls[1]
-        movie.low_rating_pct = rating_lvls[3] + rating_lvls[4]
+        if rating_lvls:
+            movie.high_rating_pct = rating_lvls[0] + rating_lvls[1]
+            movie.low_rating_pct = rating_lvls[3] + rating_lvls[4]
         if wish_count:
             movie.wish_count = wish_count
         if collect_count:
