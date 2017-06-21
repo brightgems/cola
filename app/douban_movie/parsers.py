@@ -38,6 +38,31 @@ from storage import DoesNotExist, DoubanMovie
 
 TIMEOUT = 15.0
 
+
+def convert(chinese):
+    numbers = {u'零':0, u'一':1, u'二':2, u'三':3, u'四':4, u'五':5, u'六':6, u'七':7, u'八':8, u'九':9, u'壹':1, u'贰':2, u'叁':3, u'肆':4, u'伍':5, u'陆':6, u'柒':7, u'捌':8, u'玖':9, u'两':2, u'廿':20, u'卅':30, u'卌':40, u'虚':50, u'圆':60, u'近':70, u'枯':80, u'无':90}
+    units = {u'个':1, u'十':10, u'百':100, u'千':1000, u'万':10000, u'亿':100000000, u'拾':10, u'佰':100, u'仟':1000}
+    number, pureNumber = 0, True
+    for i in range(len(chinese)):
+        if chinese[i] in units or chinese[i] in [u'廿', u'卅', u'卌', u'虚', u'圆', u'近', u'枯', u'无']:
+            pureNumber = False
+            break
+        if chinese[i] in numbers:number = number * 10 + numbers[chinese[i]]
+    if pureNumber:
+        print("PN")
+        return number
+    number = 0
+    for i in range(len(chinese)):
+        if chinese[i] in numbers or chinese[i] == u'十' and (i == 0 or  chinese[i - 1] not in numbers or chinese[i - 1] == u'零'):
+            base, currentUnit = 10 if chinese[i] == u'十' and (i == 0 or chinese[i] == u'十' and chinese[i - 1] not in numbers or chinese[i - 1] == u'零') else numbers[chinese[i]], u'个'
+            for j in range(i + 1, len(chinese)):
+                if chinese[j] in units:
+                    if units[chinese[j]] >= units[currentUnit]:
+                        base, currentUnit = base * units[chinese[j]], chinese[j]
+            number = number + base
+    return number
+
+
 class DoubanLoginFailure(LoginFailure): pass
 
 class DoubanMovieParser(Parser):
@@ -112,13 +137,20 @@ class DoubanMovieParser(Parser):
             subtype = 't'
         else:
             subtype = 'm'
+        try:
+            title = soup.select("span[property='v:itemreviewed']")[0].text.strip()
+        except:
+            raise FetchBannedError()
 
-        title = soup.select("span[property='v:itemreviewed']")[0].text
-        year = soup.select("div#content > h1")[0].find_all("span")[1].text[1:-1]
+        year_tags = soup.select("div#content > h1 span.year")
+        if year_tags:
+            year = year_tags[0].text[1:-1]
+        else:
+            year = None
         # self.logger.debug(title)
 
         summary_tags = soup.select("span[property='v:summary']")
-        summary = summary_tags[0].text if summary_tags else ''
+        summary = summary_tags[0].text.strip() if summary_tags else ''
             
         # tags
         tag_tags = soup.select('div .tags-body a')
@@ -182,7 +214,8 @@ class DoubanMovieParser(Parser):
         elif len(pubdate) == 7:
             pubdate = pubdate + "-15"
         pubdate = datetime.strptime(pubdate, '%Y-%m-%d')
-
+        if not year:
+            year = datetime.strftime('%Y')
         # get wishes
         wishes_tags = soup.select('div #subject-others-interests > .subject-others-interests-ft > a')
         #print wishes_tags
@@ -214,12 +247,20 @@ class DoubanMovieParser(Parser):
             movie.current_season = season_tags[0].select('option[selected]')[0].text     
         photo_url = soup.select('a[class="nbgnbg"] img')[0].attrs['src']
         #region save movie
+        def parseNumber(v):
+            m = re.findall('(\d+).*',v)
+            if m:
+                return int(m[0])
+            else:
+                # parse chinese
+                return convert(v.strip())
+
         info_map = {
             u'制片国家/地区': {'field': 'countries'},
             u'语言': {'field': 'languages'},
-            u'集数': {'field': 'episodes_count','func': lambda v:  re.findall('(\d+).*',v)[0]},
-            u'单集片长': {'field': 'duration','func': lambda v:  re.findall('(\d+).*',v)[0]},
-            u'片长': {'field': 'duration','func': lambda v:  re.findall('(\d+).*',v)[0]},
+            u'集数': {'field': 'episodes_count','func': parseNumber},
+            u'单集片长': {'field': 'duration','func': parseNumber},
+            u'片长': {'field': 'duration','func': parseNumber},
             u'又名': {'field': 'aka','func': lambda v: v.split('/')},
             u'IMDb链接':{'field':'imdb_id'}
         }
@@ -243,7 +284,8 @@ class DoubanMovieParser(Parser):
         movie.directors = directors
         movie.casts = casts
         movie.writers = writers
-        movie.rating = float(rating_num)
+        if rating_num:
+            movie.rating = float(rating_num)
         if rating_lvls:
             movie.high_rating_pct = rating_lvls[0] + rating_lvls[1]
             movie.low_rating_pct = rating_lvls[3] + rating_lvls[4]
@@ -267,6 +309,5 @@ class DoubanMovieParser(Parser):
             if not _is_same(out_url,url) and out_url.startswith("https://movie.douban.com/subject"):
                 sid_next = self.get_subject_id(out_url)
                 if sid_next != sid:
-                    print(out_url)
                     yield out_url
         #endregion
