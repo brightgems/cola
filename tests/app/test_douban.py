@@ -23,23 +23,31 @@ from datetime import datetime
 
 from app.douban_movie import DoubanMovieParser, url_patterns, \
                          mongo_host, mongo_port, db_name
+from app.douban_movie.parsers import convert
 
 class Test(unittest.TestCase):
 
 
     def testDoubanMovieParser(self):
         parser = DoubanMovieParser()
-        url = 'https://movie.douban.com/subject/2224146/'
+        url = 'https://movie.douban.com/subject/24870577/'
         parser.parse(url)
         
         from pymongo import MongoClient
         conn = MongoClient(mongo_host, mongo_port)
         db = getattr(conn, db_name)
-        movie = db.douban_movie.find_one({'sid': '2224146'})
+        movie = db.douban_movie.find_one({'sid': '24870577'})
         self.assertIsNotNone(movie)
         self.assertTrue(movie['casts'] != [])
-        print(movie)
+        #print(movie)
         #db.douban_movie.remove({'title': u'红楼梦'})
+
+    def testChineseNum(self):
+        n = convert(u'五十')
+        self.assertEqual(n,50)
+        n = convert(u'五十分钟')
+        self.assertEqual(n,50)
+
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
     unittest.main()

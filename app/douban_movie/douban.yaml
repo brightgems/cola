@@ -8,9 +8,9 @@ job:
     max: -1  # to the cluster, -1 means no restrictions, if greater than 0, means webpages opened per minute
     single: -1 # max restrictions to a single instance
     adaptive: no
-  instances: 2
+  instances: 4
   priorities: 3 # priorities queue count in mq
-  copies: 2 # redundant size of objects in mq
+  copies: 1 # redundant size of objects in mq
   inc: no
   shuffle: yes # only work in bundle mode, means the urls in a bundle will shuffle before fetching
   error:
@@ -31,7 +31,9 @@ job:
   starts:
     - url: https://movie.douban.com/subject/26322644/
     - url: https://movie.douban.com/subject/26342366/
+    - url: https://movie.douban.com/subject/26707472/
+    - url: https://movie.douban.com/subject/26688480/
   fetch:
     actor: yes
     director: yes
-  clear: yes
+  clear: no

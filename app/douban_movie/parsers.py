@@ -21,7 +21,7 @@ Created on 2013-6-8
 '''
 
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 import urlparse
 
 from cola.core.parsers import Parser
@@ -53,7 +53,7 @@ def convert(chinese):
         return number
     number = 0
     for i in range(len(chinese)):
-        if chinese[i] in numbers or chinese[i] == u'十' and (i == 0 or  chinese[i - 1] not in numbers or chinese[i - 1] == u'零'):
+        if chinese[i] in numbers or chinese[i] == u'十' and (i == 0 or chinese[i - 1] not in numbers or chinese[i - 1] == u'零'):
             base, currentUnit = 10 if chinese[i] == u'十' and (i == 0 or chinese[i] == u'十' and chinese[i - 1] not in numbers or chinese[i - 1] == u'零') else numbers[chinese[i]], u'个'
             for j in range(i + 1, len(chinese)):
                 if chinese[j] in units:
@@ -114,6 +114,13 @@ class DoubanMovieParser(Parser):
                 
         url = url or self.url
         sid = self.get_subject_id(url)
+        movie = self.get_movie_subject(sid)
+        print(datetime.utcnow())
+        # if entry has updated in latest 24 hours, skip this url
+        if movie.last_update and abs((datetime.utcnow() - movie.last_update).days) > 1:
+            self.logger.warn('Skip vistied url: %s' % url)
+            return
+        
         self.logger.debug('proxy:{}'.format(self.opener.proxies))
 
         try:        
@@ -128,9 +135,6 @@ class DoubanMovieParser(Parser):
         if html == None:
             raise FetchBannedError()
 
-        movie = self.get_movie_subject(sid)
-        
-        
         soup = beautiful_soup(html)
 
         if re.compile('<span class="pl">集数:</span>').findall(html):

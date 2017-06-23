@@ -73,6 +73,7 @@
   <ItemGroup>
     <Compile Include="app\douban_movie\conf.py" />
     <Compile Include="app\douban_movie\parsers.py" />
+    <Compile Include="app\douban_movie\starts.py" />
     <Compile Include="app\douban_movie\storage.py" />
     <Compile Include="app\douban_movie\__init__.py" />
     <Compile Include="app\exchange_rate\__init__.py">

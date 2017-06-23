@@ -308,6 +308,7 @@ class Job(object):
             
             for cb in self.shutdown_callbacks:
                 cb()
+
             if self.ctx.is_local_mode is True and hasattr(self, 'manager'):
                 try:
                     self.manager.shutdown()
