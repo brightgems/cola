@@ -219,7 +219,7 @@ class DoubanMovieParser(Parser):
             pubdate = pubdate + "-15"
         pubdate = datetime.strptime(pubdate, '%Y-%m-%d')
         if not year:
-            year = datetime.strftime('%Y')
+            year = pubdate.strftime('%Y')
         # get wishes
         wishes_tags = soup.select('div #subject-others-interests > .subject-others-interests-ft > a')
         #print wishes_tags
