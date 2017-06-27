@@ -233,7 +233,7 @@ class DoubanMovieParser(Parser):
                 wish_count = m.group('wishes')
                 continue
 
-            m = re.match(u'(?P<collections>[0-9]+)人看过',wishes_tags[1].text)
+            m = re.match(u'(?P<collections>[0-9]+)人看过',wishes_tags[i].text)
             if m:
                 collect_count = m.group('collections')
             
